@@ -95,6 +95,8 @@ class AvatarDevice:
         self._serial = serial.Serial(serialport, 115200)
         self.cpu_leds = [self.RGBWled() for _ in range(8)]
         self.raid_leds = [self.RGBled() for _ in range(4)]
+        self.sda_led = self.RGBled()
+        self.lamps = [self.RGBled() for _ in range(2)]
 
     def __del__(self):
         self._serial.close()
@@ -103,6 +105,9 @@ class AvatarDevice:
         packet = [ord(c) for c in 'xx']
         for rbgw in self.cpu_leds:
             rbgw._extendPacket(packet)
+        for rgb in self.lamps:
+            rgb._extendPacket(packet)
+        self.sda_led._extendPacket(packet)
         for rgb in self.raid_leds:
             rgb._extendPacket(packet)
         self._serial.write(packet)
@@ -112,6 +117,11 @@ class AvatarDevice:
 def main():
     
     avatar = AvatarDevice('/dev/ttyUSB0')
+    
+    avatar.lamps[0].r = 10
+    avatar.lamps[0].b = 30
+    avatar.lamps[1].r = 10
+    avatar.lamps[1].b = 30
 
     raiddevices = ['sdb', 'sdc', 'sdd', 'sde']
     rootdevice = 'sda'
@@ -151,14 +161,28 @@ def main():
             raid_led.g = 2
             raid_led.b = 0
             if activity.bytesread > 0 or activity.byteswritten > 0:
-                raid_led.b = 0
-                raid_led.g = 30 if frame % 2 == 0 else 0
+                raid_led.g = 30
             if activity.byteswritten > 0:
-                raid_led.b = 0
-                raid_led.r = 7
+                raid_led.r = 5
+
+        activity = disks[rootdevice]
+        led = avatar.sda_led
+        led.r = 0
+        led.g = 0
+        led.b = 0
+        if activity.bytesread > 0:
+            led.g = 70
+        if activity.byteswritten > 0:
+            led.r = 30
 
         avatar.update()
-        time.sleep(0.05)
+        time.sleep(0.01)
+        for i in range(4):
+            led = avatar.raid_leds[i]
+            led.g = 2
+        avatar.update()
+            
+        time.sleep(0.04)
 
     return 0
 
