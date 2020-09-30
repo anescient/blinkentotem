@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 
-import serial
 import time
-import random
+import serial
 import psutil
 
 
@@ -79,23 +78,24 @@ class AvatarDevice:
             self.g = 0
             self.b = 0
             self.w = 0
-        def _extendPacket(self, packet):
-            packet.extend([self.r, self.g, self.b, self.w])
 
+        def extend_packet(self, packet):
+            packet.extend([self.r, self.g, self.b, self.w])
 
     class RGBled:
         def __init__(self):
             self.r = 0
             self.g = 0
             self.b = 0
-        def _extendPacket(self, packet):
+
+        def extend_packet(self, packet):
             packet.extend([self.r, self.g, self.b])
-    
+
     def __init__(self, serialport):
         self._serial = serial.Serial(serialport, 115200)
-        self.cpu_leds = [self.RGBWled() for _ in range(8)]
-        self.raid_leds = [self.RGBled() for _ in range(4)]
-        self.sda_led = self.RGBled()
+        self.cpus = [self.RGBWled() for _ in range(8)]
+        self.raid = [self.RGBled() for _ in range(4)]
+        self.sysdisk = self.RGBled()
         self.lamps = [self.RGBled() for _ in range(2)]
 
     def __del__(self):
@@ -103,21 +103,21 @@ class AvatarDevice:
 
     def update(self):
         packet = [ord(c) for c in 'xx']
-        for rbgw in self.cpu_leds:
-            rbgw._extendPacket(packet)
+        for rbgw in self.cpus:
+            rbgw.extend_packet(packet)
         for rgb in self.lamps:
-            rgb._extendPacket(packet)
-        self.sda_led._extendPacket(packet)
-        for rgb in self.raid_leds:
-            rgb._extendPacket(packet)
+            rgb.extend_packet(packet)
+        self.sysdisk.extend_packet(packet)
+        for rgb in self.raid:
+            rgb.extend_packet(packet)
         self._serial.write(packet)
         self._serial.flush()
 
 
 def main():
-    
+
     avatar = AvatarDevice('/dev/ttyUSB0')
-    
+
     avatar.lamps[0].r = 10
     avatar.lamps[0].b = 30
     avatar.lamps[1].r = 10
@@ -132,7 +132,7 @@ def main():
     redi = 0
 
     frame = 0
-    while(True):
+    while True:
         frame += 1
         
         cputimes = psutil.cpu_times(percpu=True)
@@ -150,12 +150,12 @@ def main():
 
         rr = [0, 1, 2, 5, 12, 20, 50, 120, 255, 255]
 
-        for load, cpu_led in zip(loads, avatar.cpu_leds):
+        for load, cpu_led in zip(loads, avatar.cpus):
             cpu_led.r = rr[int(load.heat * 8)]
             cpu_led.g = 0 if load.io < 0.1 else 60
             cpu_led.b = 1 + int(load.blue ** 2 * 250)
 
-        for device, raid_led in zip(raiddevices, avatar.raid_leds):
+        for device, raid_led in zip(raiddevices, avatar.raid):
             activity = disks[device]
             raid_led.r = 0
             raid_led.g = 2
@@ -166,7 +166,7 @@ def main():
                 raid_led.r = 5
 
         activity = disks[rootdevice]
-        led = avatar.sda_led
+        led = avatar.sysdisk
         led.r = 0
         led.g = 0
         led.b = 0
@@ -178,10 +178,10 @@ def main():
         avatar.update()
         time.sleep(0.01)
         for i in range(4):
-            led = avatar.raid_leds[i]
+            led = avatar.raid[i]
             led.g = 2
         avatar.update()
-            
+
         time.sleep(0.04)
 
     return 0
