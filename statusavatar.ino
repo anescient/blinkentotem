@@ -6,8 +6,45 @@
 #define RGB_PIN     11
 #define RGB_COUNT   7
 
+
 Adafruit_NeoPixel rgbwpix;
 Adafruit_NeoPixel rgbpix;
+
+#define FRAMESIZE (RGBW_COUNT * 4 + RGB_COUNT * 3)
+char frame[FRAMESIZE];
+
+void offline() {
+  for(int i = 0; i < RGBW_COUNT; i++)
+    rgbwpix.setPixelColor(i, 0, 0, 0, 0);
+  rgbwpix.show();
+
+  for(int i = 0; i < RGB_COUNT; i++)
+    rgbpix.setPixelColor(i, 0, 0, 0);
+  rgbpix.setPixelColor(0, 20, 0, 0);
+  rgbpix.setPixelColor(1, 20, 0, 0);
+  rgbpix.show();
+}
+
+void pushframe() {
+  size_t frame_i = 0;
+
+  for(int i = 0; i < RGBW_COUNT; i++) {
+    int r = frame[frame_i++];
+    int g = frame[frame_i++];
+    int b = frame[frame_i++];
+    int w = frame[frame_i++];
+    rgbwpix.setPixelColor(i, g, r, b, w);
+  }
+  rgbwpix.show();
+
+  for(int i = 0; i < RGB_COUNT; i++) {
+    int r = frame[frame_i++];
+    int g = frame[frame_i++];
+    int b = frame[frame_i++];
+    rgbpix.setPixelColor(i, r, g, b);
+  }
+  rgbpix.show();
+}
 
 void setup() {
   pinMode(RGBW_PIN, OUTPUT);
@@ -18,31 +55,18 @@ void setup() {
   rgbpix = Adafruit_NeoPixel(RGB_COUNT, RGB_PIN);
   rgbpix.begin();
 
+  offline();
+
+  Serial.setTimeout(250);
   Serial.begin(115200);
 }
 
 void loop() {
-  int r, g, b, w;
-
   if(Serial.find("xx")) {
-
-    while(Serial.available() < 4 * RGBW_COUNT + 3 * RGB_COUNT);
-    
-    for(int i = 0; i < RGBW_COUNT; i++) {
-      r = Serial.read();
-      g = Serial.read();
-      b = Serial.read();
-      w = Serial.read();
-      rgbwpix.setPixelColor(i, g, r, b, w);
-    }    
-    rgbwpix.show();
-
-    for(int i = 0; i < RGB_COUNT; i++) {
-      r = Serial.read();
-      g = Serial.read();
-      b = Serial.read();
-      rgbpix.setPixelColor(i, r, g, b);
+    if(Serial.readBytes(frame, FRAMESIZE) == FRAMESIZE) {
+      pushframe();
     }
-    rgbpix.show();
+  } else {
+    offline();
   }
 }
