@@ -11,12 +11,12 @@ class EightBitCurve:
 
 
 class DiskActivity:
-    
+
     def __init__(self):
         self._sdiskio = None
         self.bytesread = 0
         self.byteswritten = 0
-    
+
     def update(self, sdiskio):
         if self._sdiskio is None:
             self._sdiskio = sdiskio
@@ -95,7 +95,7 @@ class AvatarDevice:
         self._serial = serial.Serial(serialport, 115200)
         self.cpus = [self.RGBWled() for _ in range(8)]
         self.raid = [self.RGBled() for _ in range(4)]
-        self.sysdisk = self.RGBled()
+        self.aux = [self.RGBled() for _ in range(2)]
         self.lamps = [self.RGBled() for _ in range(2)]
 
     def __del__(self):
@@ -107,7 +107,8 @@ class AvatarDevice:
             rbgw.extend_packet(packet)
         for rgb in self.lamps:
             rgb.extend_packet(packet)
-        self.sysdisk.extend_packet(packet)
+        for rgb in self.aux:
+            rgb.extend_packet(packet)
         for rgb in self.raid:
             rgb.extend_packet(packet)
         self._serial.write(packet)
@@ -118,10 +119,9 @@ def main():
 
     avatar = AvatarDevice('/dev/ttyUSB0')
 
-    avatar.lamps[0].r = 10
-    avatar.lamps[0].b = 30
-    avatar.lamps[1].r = 10
-    avatar.lamps[1].b = 30
+    avatar.lamps[0].r = avatar.lamps[1].r = 30
+    avatar.lamps[0].g = avatar.lamps[1].g = 15
+    avatar.lamps[0].b = avatar.lamps[1].b = 25
 
     raiddevices = ['sdb', 'sdc', 'sdd', 'sde']
     rootdevice = 'sda'
@@ -134,7 +134,7 @@ def main():
     frame = 0
     while True:
         frame += 1
-        
+
         cputimes = psutil.cpu_times(percpu=True)
         for i in range(8):
             loads[i].update(cputimes[i])
@@ -166,14 +166,14 @@ def main():
                 raid_led.r = 5
 
         activity = disks[rootdevice]
-        led = avatar.sysdisk
-        led.r = 0
-        led.g = 0
-        led.b = 0
+        for led in avatar.aux:
+            led.r = 10
+            led.g = 0
+            led.b = 0
         if activity.bytesread > 0:
-            led.g = 70
+            avatar.aux[frame % 2].b = 20
         if activity.byteswritten > 0:
-            led.r = 30
+            avatar.aux[1].r = 15
 
         avatar.update()
         time.sleep(0.01)
