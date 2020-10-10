@@ -7,7 +7,39 @@ import psutil
 
 # wacky functions mapping [0.0, 1.0] to [0, 255]
 class EightBitCurve:
-    pass
+
+    class _Point:
+        def __init__(self, x, y):
+            self.x = float(x)
+            self.y = float(y)
+
+    def __init__(self):
+        self.points = []
+
+    def addPoint(self, x, fofx):
+        self.points.append(self._Point(x, fofx))
+        self.points.sort(key=lambda p: p.x)
+
+    def sample(self, x):
+        assert len(self.points) >= 2
+        if x <= self.points[0].x:
+            return int(self.points[0].y)
+        if x >= self.points[-1].x:
+            return int(self.points[-1].y)
+
+        lowpoint = self.points[0]
+        highpoint = None
+        for point in self.points[1:]:
+            if point.x > x:
+                highpoint = point
+                break
+            lowpoint = point
+        assert lowpoint.x <= x < highpoint.x
+
+        segment = (x - lowpoint.x) / (highpoint.x - lowpoint.x)
+        assert 0.0 <= segment <= 1.0
+        y = (1.0 - segment) * lowpoint.y + segment * highpoint.y
+        return max(0, min(255, int(y)))
 
 
 class DiskActivity:
@@ -114,7 +146,6 @@ class AvatarDevice:
         self._serial.write(packet)
         self._serial.flush()
 
-
 def main():
 
     avatar = AvatarDevice('/dev/ttyUSB0')
@@ -130,6 +161,12 @@ def main():
     disks = {device: DiskActivity() for device in ['sda', 'sdb', 'sdc', 'sdd', 'sde']}
 
     redi = 0
+
+    heatcurve = EightBitCurve()
+    heatcurve.addPoint(0.0, 0)
+    heatcurve.addPoint(0.2, 0)
+    heatcurve.addPoint(0.8, 10)
+    heatcurve.addPoint(1.0, 255)
 
     frame = 0
     while True:
@@ -148,10 +185,8 @@ def main():
         for device, activity in disks.items():
             activity.update(diskio[device])
 
-        rr = [0, 1, 2, 5, 12, 20, 50, 120, 255, 255]
-
         for load, cpu_led in zip(loads, avatar.cpus):
-            cpu_led.r = rr[int(load.heat * 8)]
+            cpu_led.r = heatcurve.sample(load.heat * 8)
             cpu_led.g = 0 if load.io < 0.1 else 60
             cpu_led.b = 1 + int(load.blue ** 2 * 250)
 
@@ -167,19 +202,24 @@ def main():
 
         activity = disks[rootdevice]
         for led in avatar.aux:
-            led.r = 10
+            led.r = 0
             led.g = 0
-            led.b = 0
+            led.b = 5
+
         if activity.bytesread > 0:
-            avatar.aux[frame % 2].b = 20
+            avatar.aux[frame % 2].b = 35
         if activity.byteswritten > 0:
-            avatar.aux[1].r = 15
+            avatar.aux[1 - frame % 2].r = 20
 
         avatar.update()
         time.sleep(0.01)
         for i in range(4):
             led = avatar.raid[i]
             led.g = 2
+        for led in avatar.aux:
+            led.r = 0
+            led.g = 0
+            led.b = 5
         avatar.update()
 
         time.sleep(0.04)
