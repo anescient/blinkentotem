@@ -87,13 +87,12 @@ class CPULoad:
         self.io = iotime / dt
 
         if self.busy >= self.heat:
-            self.heat = 0.95 * self.heat + 0.05 * self.busy
-        else:
-            self.heat *= 0.99
+            self.heat += (0.05 * (self.busy - self.heat)) ** 2
         if self.heat < 0:
             self.heat = 0
         if self.heat > 1:
             self.heat = 1
+        self.heat *= 0.999 - 0.04 * self.heat
 
         self.blue = self.blue * 0.3
         if self.busy > self.blue:
@@ -146,6 +145,7 @@ class AvatarDevice:
         self._serial.write(packet)
         self._serial.flush()
 
+
 def main():
 
     avatar = AvatarDevice('/dev/ttyUSB0')
@@ -163,9 +163,16 @@ def main():
     redi = 0
 
     heatcurve = EightBitCurve()
-    heatcurve.addPoint(0.0, 0)
-    heatcurve.addPoint(0.2, 0)
-    heatcurve.addPoint(0.8, 10)
+    #heatcurve.addPoint(0.0, 5)
+    #heatcurve.addPoint(0.9, 30)
+    #heatcurve.addPoint(1.0, 255)
+    heatcurve.addPoint(0.0, 1)
+    heatcurve.addPoint(0.1, 5)
+    heatcurve.addPoint(0.2, 10)
+    heatcurve.addPoint(0.3, 20)
+    heatcurve.addPoint(0.4, 40)
+    heatcurve.addPoint(0.5, 70)
+    heatcurve.addPoint(0.9, 120)
     heatcurve.addPoint(1.0, 255)
 
     frame = 0
