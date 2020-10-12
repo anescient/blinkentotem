@@ -65,9 +65,6 @@ class CPULoad:
         self._prevscputimes = None
         self.busy = 0
         self.io = 0
-        self.blue = 0
-        self.heat = 0
-        self.longbusy = 0
 
     def update(self, scputimes):
         if self._prevscputimes is None:
@@ -86,8 +83,28 @@ class CPULoad:
         self.busy = busytime / dt
         self.io = iotime / dt
 
-        if self.busy >= self.heat:
-            self.heat += (0.05 * (self.busy - self.heat)) ** 2
+
+class CPU:
+
+    heatcurve = EightBitCurve()
+    heatcurve.addPoint(0.0, 1)
+    heatcurve.addPoint(0.1, 5)
+    heatcurve.addPoint(0.2, 10)
+    heatcurve.addPoint(0.3, 20)
+    heatcurve.addPoint(0.4, 40)
+    heatcurve.addPoint(0.5, 70)
+    heatcurve.addPoint(0.9, 120)
+    heatcurve.addPoint(1.0, 255)
+
+    def __init__(self):
+        self.blue = 0
+        self.heat = 0
+        self.longbusy = 0
+        self.io = False
+
+    def update(self, cpuload):
+        if cpuload.busy >= self.heat:
+            self.heat += (0.05 * (cpuload.busy - self.heat)) ** 2
         if self.heat < 0:
             self.heat = 0
         if self.heat > 1:
@@ -95,10 +112,17 @@ class CPULoad:
         self.heat *= 0.999 - 0.04 * self.heat
 
         self.blue = self.blue * 0.3
-        if self.busy > self.blue:
-            self.blue = 0.5 * self.blue + 0.5 * self.busy
+        if cpuload.busy > self.blue:
+            self.blue = 0.5 * self.blue + 0.5 * cpuload.busy
 
-        self.longbusy = 0.999 * self.longbusy + 0.001 * self.busy
+        self.longbusy = 0.999 * self.longbusy + 0.001 * cpuload.busy
+
+        self.io = cpuload.io > 0.1
+
+    def set_led(self, led):
+        led.r = self.heatcurve.sample(self.heat * 8)
+        led.g = 60 if self.io else 0
+        led.b = 1 + int(self.blue ** 2 * 250)
 
 
 class AvatarDevice:
@@ -147,6 +171,7 @@ class AvatarDevice:
 
 
 def main():
+    CPUS = list(range(8))
 
     avatar = AvatarDevice('/dev/ttyUSB0')
 
@@ -157,30 +182,19 @@ def main():
     raiddevices = ['sdb', 'sdc', 'sdd', 'sde']
     rootdevice = 'sda'
 
-    loads = [CPULoad() for _ in range(8)]
+    loads = [CPULoad() for _ in CPUS]
     disks = {device: DiskActivity() for device in ['sda', 'sdb', 'sdc', 'sdd', 'sde']}
 
     redi = 0
 
-    heatcurve = EightBitCurve()
-    #heatcurve.addPoint(0.0, 5)
-    #heatcurve.addPoint(0.9, 30)
-    #heatcurve.addPoint(1.0, 255)
-    heatcurve.addPoint(0.0, 1)
-    heatcurve.addPoint(0.1, 5)
-    heatcurve.addPoint(0.2, 10)
-    heatcurve.addPoint(0.3, 20)
-    heatcurve.addPoint(0.4, 40)
-    heatcurve.addPoint(0.5, 70)
-    heatcurve.addPoint(0.9, 120)
-    heatcurve.addPoint(1.0, 255)
+    cpus = [CPU() for _ in CPUS]
 
     frame = 0
     while True:
         frame += 1
 
         cputimes = psutil.cpu_times(percpu=True)
-        for i in range(8):
+        for i in CPUS:
             loads[i].update(cputimes[i])
 
         redi += 0.02
@@ -192,10 +206,9 @@ def main():
         for device, activity in disks.items():
             activity.update(diskio[device])
 
-        for load, cpu_led in zip(loads, avatar.cpus):
-            cpu_led.r = heatcurve.sample(load.heat * 8)
-            cpu_led.g = 0 if load.io < 0.1 else 60
-            cpu_led.b = 1 + int(load.blue ** 2 * 250)
+        for load, cpu, led in zip(loads, cpus, avatar.cpus):
+            cpu.update(load)
+            cpu.set_led(led)
 
         for device, raid_led in zip(raiddevices, avatar.raid):
             activity = disks[device]
