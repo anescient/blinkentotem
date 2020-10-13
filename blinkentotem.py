@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import math
 import time
 import serial
 import psutil
@@ -43,7 +44,9 @@ class UnitCurve:
 
 
 def unitToByte(x):
-    return max(0, min(255, int(255.0 * x)))
+    if x <= 0:
+        return 0
+    return max(1, min(255, int(256.0 * x)))
 
 
 class DiskActivity:
@@ -102,10 +105,17 @@ class CPUIndicator:
     heatcurve.addPoint(0.9, 0.5)
     heatcurve.addPoint(1.0, 1.0)
 
+    bluecurve = UnitCurve()
+    bluecurve.addPoint(0, 0)
+    bluecurve.addPoint(0.25, 0.02)
+    bluecurve.addPoint(0.35, 0.05)
+    bluecurve.addPoint(0.75, 0.4)
+    bluecurve.addPoint(1.0, 1.0)
+
     def __init__(self):
-        self.blue = 0
+        self.phase = 0 # radians
+        self.velocity = 0 # nominally in [0.0, 1.0]
         self.heat = 0
-        self.longbusy = 0
         self.io = False
 
     def update(self, cpuactivity):
@@ -117,18 +127,15 @@ class CPUIndicator:
             self.heat = 1
         self.heat *= 0.999 - 0.04 * self.heat
 
-        self.blue = self.blue * 0.3
-        if cpuactivity.busy > self.blue:
-            self.blue = 0.5 * self.blue + 0.5 * cpuactivity.busy
-
-        self.longbusy = 0.999 * self.longbusy + 0.001 * cpuactivity.busy
+        self.velocity = 0.9 * self.velocity + 0.1 * cpuactivity.busy
+        self.phase = (self.phase + 4 * self.velocity) % (2 * math.pi)
 
         self.io = cpuactivity.io > 0.1
 
     def set_led(self, led):
         led.r = unitToByte(self.heatcurve.sample(self.heat * 8))
         led.g = 60 if self.io else 0
-        led.b = 1 + int(self.blue ** 2 * 250)
+        led.b = unitToByte(self.velocity * (0.5 * (math.sin(self.phase) + 1)))
 
 
 class Totem:
@@ -187,7 +194,7 @@ def main():
     rootdevice = 'sda'
 
     cpus = [CPUActivity(i) for i in range(8)]
-    disks = {device: DiskActivity() for device in ['sda', 'sdb', 'sdc', 'sdd', 'sde']}
+    disks = {device: DiskActivity() for device in [rootdevice] + raiddevices}
 
     cpuindicators = [CPUIndicator() for _ in cpus]
 
