@@ -59,32 +59,34 @@ class DiskActivity:
 
 # psutil's "cpu_percent" methods changed or broke or something
 # they sucked anyway
-class CPULoad:
+class CPUActivity:
 
-    def __init__(self):
-        self._prevscputimes = None
+    def __init__(self, scpuindex):
+        self._prevtimes = None
+        self._scpuindex = scpuindex
         self.busy = 0
         self.io = 0
 
     def update(self, scputimes):
-        if self._prevscputimes is None:
-            self._prevscputimes = scputimes
-        prevsum = sum(self._prevscputimes)
-        nextsum = sum(scputimes)
+        nexttimes = scputimes[self._scpuindex]
+        if self._prevtimes is None:
+            self._prevtimes = nexttimes
+        prevsum = sum(self._prevtimes)
+        nextsum = sum(nexttimes)
         dt = nextsum - prevsum
         if dt < 0.02:
             return
 
-        idletime = scputimes.idle - self._prevscputimes.idle
-        iotime = scputimes.iowait - self._prevscputimes.iowait
+        idletime = nexttimes.idle - self._prevtimes.idle
+        iotime = nexttimes.iowait - self._prevtimes.iowait
         busytime = dt - idletime - iotime
-        self._prevscputimes = scputimes
+        self._prevtimes = nexttimes
 
         self.busy = busytime / dt
         self.io = iotime / dt
 
 
-class CPU:
+class CPUIndicator:
 
     heatcurve = EightBitCurve()
     heatcurve.addPoint(0.0, 1)
@@ -102,9 +104,9 @@ class CPU:
         self.longbusy = 0
         self.io = False
 
-    def update(self, cpuload):
-        if cpuload.busy >= self.heat:
-            self.heat += (0.05 * (cpuload.busy - self.heat)) ** 2
+    def update(self, cpuactivity):
+        if cpuactivity.busy >= self.heat:
+            self.heat += (0.05 * (cpuactivity.busy - self.heat)) ** 2
         if self.heat < 0:
             self.heat = 0
         if self.heat > 1:
@@ -112,12 +114,12 @@ class CPU:
         self.heat *= 0.999 - 0.04 * self.heat
 
         self.blue = self.blue * 0.3
-        if cpuload.busy > self.blue:
-            self.blue = 0.5 * self.blue + 0.5 * cpuload.busy
+        if cpuactivity.busy > self.blue:
+            self.blue = 0.5 * self.blue + 0.5 * cpuactivity.busy
 
-        self.longbusy = 0.999 * self.longbusy + 0.001 * cpuload.busy
+        self.longbusy = 0.999 * self.longbusy + 0.001 * cpuactivity.busy
 
-        self.io = cpuload.io > 0.1
+        self.io = cpuactivity.io > 0.1
 
     def set_led(self, led):
         led.r = self.heatcurve.sample(self.heat * 8)
@@ -171,8 +173,6 @@ class AvatarDevice:
 
 
 def main():
-    CPUS = list(range(8))
-
     avatar = AvatarDevice('/dev/ttyUSB0')
 
     avatar.lamps[0].r = avatar.lamps[1].r = 30
@@ -182,33 +182,24 @@ def main():
     raiddevices = ['sdb', 'sdc', 'sdd', 'sde']
     rootdevice = 'sda'
 
-    loads = [CPULoad() for _ in CPUS]
+    cpus = [CPUActivity(i) for i in range(8)]
     disks = {device: DiskActivity() for device in ['sda', 'sdb', 'sdc', 'sdd', 'sde']}
 
-    redi = 0
-
-    cpus = [CPU() for _ in CPUS]
+    cpuindicators = [CPUIndicator() for _ in cpus]
 
     frame = 0
     while True:
         frame += 1
 
         cputimes = psutil.cpu_times(percpu=True)
-        for i in CPUS:
-            loads[i].update(cputimes[i])
-
-        redi += 0.02
-        for load in loads:
-            redi += 0.3 * load.busy
-        redi %= 8
+        for cpu, indicator, led in zip(cpus, cpuindicators, avatar.cpus):
+            cpu.update(cputimes)
+            indicator.update(cpu)
+            indicator.set_led(led)
 
         diskio = psutil.disk_io_counters(perdisk=True, nowrap=True)
         for device, activity in disks.items():
             activity.update(diskio[device])
-
-        for load, cpu, led in zip(loads, cpus, avatar.cpus):
-            cpu.update(load)
-            cpu.set_led(led)
 
         for device, raid_led in zip(raiddevices, avatar.raid):
             activity = disks[device]
