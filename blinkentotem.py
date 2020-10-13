@@ -5,8 +5,8 @@ import serial
 import psutil
 
 
-# wacky functions mapping [0.0, 1.0] to [0, 255]
-class EightBitCurve:
+# mapping [0.0, 1.0] to [0.0, 1.0]
+class UnitCurve:
 
     class _Point:
         def __init__(self, x, y):
@@ -39,7 +39,11 @@ class EightBitCurve:
         segment = (x - lowpoint.x) / (highpoint.x - lowpoint.x)
         assert 0.0 <= segment <= 1.0
         y = (1.0 - segment) * lowpoint.y + segment * highpoint.y
-        return max(0, min(255, int(y)))
+        return max(0.0, min(1.0, y))
+
+
+def unitToByte(x):
+    return max(0, min(255, int(255.0 * x)))
 
 
 class DiskActivity:
@@ -88,15 +92,15 @@ class CPUActivity:
 
 class CPUIndicator:
 
-    heatcurve = EightBitCurve()
-    heatcurve.addPoint(0.0, 1)
-    heatcurve.addPoint(0.1, 5)
-    heatcurve.addPoint(0.2, 10)
-    heatcurve.addPoint(0.3, 20)
-    heatcurve.addPoint(0.4, 40)
-    heatcurve.addPoint(0.5, 70)
-    heatcurve.addPoint(0.9, 120)
-    heatcurve.addPoint(1.0, 255)
+    heatcurve = UnitCurve()
+    heatcurve.addPoint(0.0, 0.004)
+    heatcurve.addPoint(0.1, 0.02)
+    heatcurve.addPoint(0.2, 0.04)
+    heatcurve.addPoint(0.3, 0.08)
+    heatcurve.addPoint(0.4, 0.16)
+    heatcurve.addPoint(0.5, 0.25)
+    heatcurve.addPoint(0.9, 0.5)
+    heatcurve.addPoint(1.0, 1.0)
 
     def __init__(self):
         self.blue = 0
@@ -122,7 +126,7 @@ class CPUIndicator:
         self.io = cpuactivity.io > 0.1
 
     def set_led(self, led):
-        led.r = self.heatcurve.sample(self.heat * 8)
+        led.r = unitToByte(self.heatcurve.sample(self.heat * 8))
         led.g = 60 if self.io else 0
         led.b = 1 + int(self.blue ** 2 * 250)
 
