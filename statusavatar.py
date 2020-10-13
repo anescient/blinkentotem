@@ -127,7 +127,7 @@ class CPUIndicator:
         led.b = 1 + int(self.blue ** 2 * 250)
 
 
-class AvatarDevice:
+class Totem:
 
     class RGBWled:
         def __init__(self):
@@ -173,11 +173,11 @@ class AvatarDevice:
 
 
 def main():
-    avatar = AvatarDevice('/dev/ttyUSB0')
+    totem = Totem('/dev/ttyUSB0')
 
-    avatar.lamps[0].r = avatar.lamps[1].r = 30
-    avatar.lamps[0].g = avatar.lamps[1].g = 15
-    avatar.lamps[0].b = avatar.lamps[1].b = 25
+    totem.lamps[0].r = totem.lamps[1].r = 30
+    totem.lamps[0].g = totem.lamps[1].g = 15
+    totem.lamps[0].b = totem.lamps[1].b = 25
 
     raiddevices = ['sdb', 'sdc', 'sdd', 'sde']
     rootdevice = 'sda'
@@ -192,7 +192,7 @@ def main():
         frame += 1
 
         cputimes = psutil.cpu_times(percpu=True)
-        for cpu, indicator, led in zip(cpus, cpuindicators, avatar.cpus):
+        for cpu, indicator, led in zip(cpus, cpuindicators, totem.cpus):
             cpu.update(cputimes)
             indicator.update(cpu)
             indicator.set_led(led)
@@ -201,7 +201,7 @@ def main():
         for device, activity in disks.items():
             activity.update(diskio[device])
 
-        for device, raid_led in zip(raiddevices, avatar.raid):
+        for device, raid_led in zip(raiddevices, totem.raid):
             activity = disks[device]
             raid_led.r = 0
             raid_led.g = 2
@@ -212,26 +212,26 @@ def main():
                 raid_led.r = 5
 
         activity = disks[rootdevice]
-        for led in avatar.aux:
+        for led in totem.aux:
             led.r = 0
             led.g = 0
             led.b = 5
 
         if activity.bytesread > 0:
-            avatar.aux[frame % 2].b = 35
+            totem.aux[frame % 2].b = 35
         if activity.byteswritten > 0:
-            avatar.aux[1 - frame % 2].r = 20
+            totem.aux[1 - frame % 2].r = 20
 
-        avatar.update()
+        totem.update()
         time.sleep(0.01)
         for i in range(4):
-            led = avatar.raid[i]
+            led = totem.raid[i]
             led.g = 2
-        for led in avatar.aux:
+        for led in totem.aux:
             led.r = 0
             led.g = 0
             led.b = 5
-        avatar.update()
+        totem.update()
 
         time.sleep(0.04)
 
