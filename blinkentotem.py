@@ -119,8 +119,10 @@ class CPUIndicator:
         self.io = False
 
     def update(self, cpuactivity):
-        if cpuactivity.busy >= self.heat:
-            self.heat += (0.05 * (cpuactivity.busy - self.heat)) ** 2
+        if cpuactivity.busy > 0.2:
+            t = (cpuactivity.busy - 0.3) / 0.7
+            if t >= self.heat:
+                self.heat += (0.05 * (t - self.heat)) ** 2
         if self.heat < 0:
             self.heat = 0
         if self.heat > 1:
@@ -128,8 +130,8 @@ class CPUIndicator:
         self.heat *= 0.999 - 0.04 * self.heat
 
         self.velocity = 0.8 * self.velocity + 0.2 * cpuactivity.busy
-        self.laggingvelocity = 0.95 * self.laggingvelocity + 0.05 * self.velocity
-        self.phase = (self.phase + self.velocity) % 1.0
+        self.laggingvelocity = 0.97 * self.laggingvelocity + 0.03 * self.velocity
+        self.phase = (self.phase + 0.7 * self.velocity) % 1.0
 
         self.io = cpuactivity.io > 0.1
 
@@ -137,7 +139,7 @@ class CPUIndicator:
         led.r = unitToByte(self.heatcurve.sample(self.heat * 8))
         led.g = 100 if self.io else 0
         v = 2 * (self.phase if self.phase < 0.5 else 1.0 - self.phase)
-        led.b = unitToByte(self.laggingvelocity * v)
+        led.b = unitToByte(self.laggingvelocity ** 2 * v)
 
 
 class Totem:
@@ -157,6 +159,9 @@ class Totem:
             self.r = 0
             self.g = 0
             self.b = 0
+
+        def setrgb(self, r, g, b):
+            self.r, self.g, self.b = r, g, b
 
         def extend_packet(self, packet):
             packet.extend([self.r, self.g, self.b])
@@ -220,23 +225,24 @@ def main():
 
         for device, led in zip(raiddevices, totem.raid):
             activity = diskactivities[device]
-            led.r = 0
-            led.g = 2
-            led.b = 0
+            led.setrgb(0, 2, 0)
             if activity.bytesread > 0 or activity.byteswritten > 0:
                 led.g = 30
             if activity.byteswritten > 0:
                 led.r = 5
 
         activity = diskactivities[rootdevice]
-        for led in totem.aux:
-            led.r = 0
-            led.g = 0
-            led.b = 5
+        led1, led2 = totem.aux
+        led1.setrgb(0, 0, 0)
+        led2.setrgb(0, 0, 25)
+
         if activity.bytesread > 0:
-            totem.aux[frame % 2].b = 35
+            led1.g = 70
+            led2.b = 50
+
         if activity.byteswritten > 0:
-            totem.aux[1 - frame % 2].r = 20
+            led2.r = 120
+            led2.b = 40
 
         totem.update()
 
@@ -244,10 +250,10 @@ def main():
 
         for led in totem.raid:
             led.g = 2
-        for led in totem.aux:
-            led.r = 0
-            led.g = 0
-            led.b = 5
+
+        led1.g = led1.g // 4
+        led2.r = led1.r // 4
+
         totem.update()
 
         time.sleep(0.04)
