@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import math
 import time
 import serial
 import psutil
@@ -113,8 +112,9 @@ class CPUIndicator:
     bluecurve.addPoint(1.0, 1.0)
 
     def __init__(self):
-        self.phase = 0 # radians
-        self.velocity = 0 # nominally in [0.0, 1.0]
+        self.phase = 0  # [0, 1)
+        self.velocity = 0  # nominally in [0.0, 1.0]
+        self.laggingvelocity = 0
         self.heat = 0
         self.io = False
 
@@ -127,15 +127,17 @@ class CPUIndicator:
             self.heat = 1
         self.heat *= 0.999 - 0.04 * self.heat
 
-        self.velocity = 0.9 * self.velocity + 0.1 * cpuactivity.busy
-        self.phase = (self.phase + 4 * self.velocity) % (2 * math.pi)
+        self.velocity = 0.8 * self.velocity + 0.2 * cpuactivity.busy
+        self.laggingvelocity = 0.95 * self.laggingvelocity + 0.05 * self.velocity
+        self.phase = (self.phase + self.velocity) % 1.0
 
         self.io = cpuactivity.io > 0.1
 
     def set_led(self, led):
         led.r = unitToByte(self.heatcurve.sample(self.heat * 8))
-        led.g = 60 if self.io else 0
-        led.b = unitToByte(self.velocity * (0.5 * (math.sin(self.phase) + 1)))
+        led.g = 100 if self.io else 0
+        v = 2 * (self.phase if self.phase < 0.5 else 1.0 - self.phase)
+        led.b = unitToByte(self.laggingvelocity * v)
 
 
 class Totem:
