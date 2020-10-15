@@ -112,7 +112,7 @@ class CPUIndicator:
     bluecurve.addPoint(1.0, 1.0)
 
     def __init__(self):
-        self.phase = 0  # [0, 1)
+        self.phase = 0  # [0.0, 1.0)
         self.velocity = 0  # nominally in [0.0, 1.0]
         self.laggingvelocity = 0
         self.heat = 0
@@ -195,50 +195,54 @@ def main():
     raiddevices = ['sdb', 'sdc', 'sdd', 'sde']
     rootdevice = 'sda'
 
-    cpus = [CPUActivity(i) for i in range(8)]
-    disks = {device: DiskActivity() for device in [rootdevice] + raiddevices}
+    cpuactivites = [CPUActivity(i) for i in range(8)]
+    diskactivities = {device: DiskActivity() for device in [rootdevice] + raiddevices}
 
-    cpuindicators = [CPUIndicator() for _ in cpus]
+    cpuindicators = [CPUIndicator() for _ in cpuactivites]
 
     frame = 0
     while True:
         frame += 1
 
         cputimes = psutil.cpu_times(percpu=True)
-        for cpu, indicator, led in zip(cpus, cpuindicators, totem.cpus):
-            cpu.update(cputimes)
-            indicator.update(cpu)
+        for activity in cpuactivites:
+            activity.update(cputimes)
+
+        diskcounters = psutil.disk_io_counters(perdisk=True, nowrap=True)
+        for device, activity in diskactivities.items():
+            activity.update(diskcounters[device])
+
+        for activity, indicator in zip(cpuactivites, cpuindicators):
+            indicator.update(activity)
+
+        for indicator, led in zip(cpuindicators, totem.cpus):
             indicator.set_led(led)
 
-        diskio = psutil.disk_io_counters(perdisk=True, nowrap=True)
-        for device, activity in disks.items():
-            activity.update(diskio[device])
-
-        for device, raid_led in zip(raiddevices, totem.raid):
-            activity = disks[device]
-            raid_led.r = 0
-            raid_led.g = 2
-            raid_led.b = 0
+        for device, led in zip(raiddevices, totem.raid):
+            activity = diskactivities[device]
+            led.r = 0
+            led.g = 2
+            led.b = 0
             if activity.bytesread > 0 or activity.byteswritten > 0:
-                raid_led.g = 30
+                led.g = 30
             if activity.byteswritten > 0:
-                raid_led.r = 5
+                led.r = 5
 
-        activity = disks[rootdevice]
+        activity = diskactivities[rootdevice]
         for led in totem.aux:
             led.r = 0
             led.g = 0
             led.b = 5
-
         if activity.bytesread > 0:
             totem.aux[frame % 2].b = 35
         if activity.byteswritten > 0:
             totem.aux[1 - frame % 2].r = 20
 
         totem.update()
+
         time.sleep(0.01)
-        for i in range(4):
-            led = totem.raid[i]
+
+        for led in totem.raid:
             led.g = 2
         for led in totem.aux:
             led.r = 0
