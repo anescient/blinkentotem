@@ -168,6 +168,7 @@ class Totem:
 
     def __init__(self, serialport):
         self._serial = serial.Serial(serialport, 115200)
+        self._lastrgb = None
         self.cpus = [self.RGBWled() for _ in range(8)]
         self.raid = [self.RGBled() for _ in range(4)]
         self.aux = [self.RGBled() for _ in range(2)]
@@ -177,15 +178,23 @@ class Totem:
         self._serial.close()
 
     def update(self):
-        packet = [ord(c) for c in 'xx']
+
+        packet = [ord(c) for c in 'np1']
         for rbgw in self.cpus:
             rbgw.extend_packet(packet)
+
+        rgbpacket = []
         for rgb in self.lamps:
-            rgb.extend_packet(packet)
+            rgb.extend_packet(rgbpacket)
         for rgb in self.aux:
-            rgb.extend_packet(packet)
+            rgb.extend_packet(rgbpacket)
         for rgb in self.raid:
-            rgb.extend_packet(packet)
+            rgb.extend_packet(rgbpacket)
+        if rgbpacket != self._lastrgb:
+            self._lastrgb = rgbpacket
+            packet[2] = ord('2')
+            packet.extend(rgbpacket)
+
         self._serial.write(packet)
         self._serial.flush()
 

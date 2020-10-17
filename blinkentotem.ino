@@ -6,12 +6,12 @@
 #define RGB_PIN     11
 #define RGB_COUNT   8
 
-
 Adafruit_NeoPixel rgbwpix;
 Adafruit_NeoPixel rgbpix;
 
-#define FRAMESIZE (RGBW_COUNT * 4 + RGB_COUNT * 3)
-char frame[FRAMESIZE];
+#define RGB_SIZE    (RGB_COUNT * 3)
+#define RGBW_SIZE   (RGBW_COUNT * 4)
+char buf[RGB_SIZE + RGBW_SIZE];
 
 void offline() {
   for(int i = 0; i < RGBW_COUNT; i++)
@@ -22,27 +22,6 @@ void offline() {
     rgbpix.setPixelColor(i, 0, 0, 0);
   rgbpix.setPixelColor(0, 20, 0, 0);
   rgbpix.setPixelColor(1, 20, 0, 0);
-  rgbpix.show();
-}
-
-void pushframe() {
-  size_t frame_i = 0;
-
-  for(int i = 0; i < RGBW_COUNT; i++) {
-    int r = frame[frame_i++];
-    int g = frame[frame_i++];
-    int b = frame[frame_i++];
-    int w = frame[frame_i++];
-    rgbwpix.setPixelColor(i, g, r, b, w);
-  }
-  rgbwpix.show();
-
-  for(int i = 0; i < RGB_COUNT; i++) {
-    int r = frame[frame_i++];
-    int g = frame[frame_i++];
-    int b = frame[frame_i++];
-    rgbpix.setPixelColor(i, r, g, b);
-  }
   rgbpix.show();
 }
 
@@ -62,10 +41,40 @@ void setup() {
 }
 
 void loop() {
-  if(Serial.find("xx")) {
-    if(Serial.readBytes(frame, FRAMESIZE) == FRAMESIZE) {
-      pushframe();
+  if(Serial.find("np")) {
+    if(Serial.readBytes(buf, 1) != 1) { return; }
+    bool do_rgb;
+    if(buf[0] == '1') {
+      do_rgb = false;
+    } else if(buf[0] == '2') {
+      do_rgb = true;
+    } else {
+      return;
     }
+
+    if(Serial.readBytes(buf, RGBW_SIZE) != RGBW_SIZE) { return; }
+    if(do_rgb && Serial.readBytes(buf + RGBW_SIZE, RGB_SIZE) != RGB_SIZE) { return; }
+
+    int buf_i = 0;
+    for(int i = 0; i < RGBW_COUNT; i++) {
+      int r = buf[buf_i++];
+      int g = buf[buf_i++];
+      int b = buf[buf_i++];
+      int w = buf[buf_i++];
+      rgbwpix.setPixelColor(i, g, r, b, w);
+    }
+    rgbwpix.show();
+
+    if(do_rgb) {
+      for(int i = 0; i < RGB_COUNT; i++) {
+        int r = buf[buf_i++];
+        int g = buf[buf_i++];
+        int b = buf[buf_i++];
+        rgbpix.setPixelColor(i, r, g, b);
+      }
+      rgbpix.show();
+    }
+
   } else {
     offline();
   }
