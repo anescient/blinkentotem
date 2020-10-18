@@ -174,6 +174,12 @@ class Totem:
         self.aux = [self.RGBled() for _ in range(2)]
         self.lamps = [self.RGBled() for _ in range(2)]
 
+        # arduino resets when comms begin
+        # gotta wait for the bootloader to timeout and run the rom
+        self.update()
+        time.sleep(0.4)
+        self.update()
+
     def __del__(self):
         self._serial.close()
 
@@ -205,6 +211,7 @@ def main():
     totem.lamps[0].r = totem.lamps[1].r = 30
     totem.lamps[0].g = totem.lamps[1].g = 15
     totem.lamps[0].b = totem.lamps[1].b = 25
+    totem.update()
 
     raiddevices = ['sdb', 'sdc', 'sdd', 'sde']
     rootdevice = 'sda'
