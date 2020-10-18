@@ -14,6 +14,7 @@ Adafruit_NeoPixel rgbpix;
 char buf[RGB_SIZE + RGBW_SIZE];
 
 void offline() {
+  digitalWrite(13, LOW);
   for(int i = 0; i < RGBW_COUNT; i++)
     rgbwpix.setPixelColor(i, 0, 0, 0, 0);
   rgbwpix.show();
@@ -26,6 +27,8 @@ void offline() {
 }
 
 void setup() {
+  pinMode(13, OUTPUT);
+
   pinMode(RGBW_PIN, OUTPUT);
   rgbwpix = Adafruit_NeoPixel(RGBW_COUNT, RGBW_PIN, NEO_RGBW);
   rgbwpix.begin();
@@ -54,6 +57,7 @@ void loop() {
 
     if(Serial.readBytes(buf, RGBW_SIZE) != RGBW_SIZE) { return; }
     if(do_rgb && Serial.readBytes(buf + RGBW_SIZE, RGB_SIZE) != RGB_SIZE) { return; }
+    digitalWrite(13, HIGH);
 
     int buf_i = 0;
     for(int i = 0; i < RGBW_COUNT; i++) {
