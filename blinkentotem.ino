@@ -36,7 +36,7 @@ void setup() {
 
   offline();
 
-  Serial.setTimeout(250);
+  Serial.setTimeout(750);
   Serial.begin(115200);
 }
 
