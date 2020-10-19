@@ -116,7 +116,7 @@ class CPUIndicator:
         self.velocity = 0  # nominally in [0.0, 1.0]
         self.laggingvelocity = 0
         self.heat = 0
-        self.io = False
+        self.ioflag = False
 
     def update(self, cpuactivity):
         if cpuactivity.busy > 0.2:
@@ -133,11 +133,11 @@ class CPUIndicator:
         self.laggingvelocity = 0.97 * self.laggingvelocity + 0.03 * self.velocity
         self.phase = (self.phase + 0.7 * self.velocity) % 1.0
 
-        self.io = cpuactivity.io > 0.1
+        self.ioflag = 4 * cpuactivity.io > cpuactivity.busy
 
     def set_led(self, led):
         led.r = unitToByte(self.heatcurve.sample(self.heat * 8))
-        led.g = 100 if self.io else 0
+        led.g = 100 if self.ioflag else 0
         v = 2 * (self.phase if self.phase < 0.5 else 1.0 - self.phase)
         led.b = unitToByte(self.laggingvelocity ** 2 * v)
 
