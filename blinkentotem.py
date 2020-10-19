@@ -249,16 +249,14 @@ def main():
 
         activity = diskactivities[rootdevice]
         led1, led2 = totem.aux
-        led1.setrgb(0, 0, 0)
-        led2.setrgb(0, 0, 25)
+        led1.setrgb(28, 35, 25)
+        led2.setrgb(15, 23, 15)
 
         if activity.bytesread > 0:
             led1.g = 70
-            led2.b = 50
 
         if activity.byteswritten > 0:
             led2.r = 120
-            led2.b = 40
 
         totem.update()
 
@@ -266,9 +264,6 @@ def main():
 
         for led in totem.raid:
             led.g = 2
-
-        led1.g = led1.g // 4
-        led2.r = led1.r // 4
 
         totem.update()
 
