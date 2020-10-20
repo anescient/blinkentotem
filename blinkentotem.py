@@ -133,7 +133,7 @@ class CPUIndicator:
         self.laggingvelocity = 0.97 * self.laggingvelocity + 0.03 * self.velocity
         self.phase = (self.phase + 0.7 * self.velocity) % 1.0
 
-        self.ioflag = 4 * cpuactivity.io > cpuactivity.busy
+        self.ioflag = cpuactivity.io > 0.1 and 4 * cpuactivity.io > cpuactivity.busy
 
     def set_led(self, led):
         led.r = unitToByte(self.heatcurve.sample(self.heat * 8))
@@ -159,9 +159,16 @@ class Totem:
             self.r = 0
             self.g = 0
             self.b = 0
+            self._stack = []
 
         def setrgb(self, r, g, b):
             self.r, self.g, self.b = r, g, b
+
+        def push(self):
+            self._stack.append((self.r, self.g, self.b))
+
+        def pop(self):
+            self.r, self.g, self.b = self._stack.pop()
 
         def extend_packet(self, packet):
             packet.extend([self.r, self.g, self.b])
@@ -249,22 +256,31 @@ def main():
 
         activity = diskactivities[rootdevice]
         led1, led2 = totem.aux
-        led1.setrgb(28, 35, 25)
-        led2.setrgb(15, 23, 15)
+        led1.setrgb(28, 33, 15)
+        led2.setrgb(15, 17, 7)
+        led1.push()
+        led2.push()
 
+        a, b = (led1, led2) if frame % 2 else (led2, led1)
         if activity.bytesread > 0:
-            led1.g = 70
-
+            a.setrgb(0, 255, 0)
+            b.g = 0
         if activity.byteswritten > 0:
-            led2.r = 120
+            b.setrgb(255, 0, 0)
+            a.r = 0
 
+        totem.update()
+        time.sleep(0.001)
+        led1.pop()
+        led2.pop()
         totem.update()
 
         time.sleep(0.01)
 
+        led1.setrgb(28, 33, 15)
+        led2.setrgb(15, 17, 7)
         for led in totem.raid:
             led.g = 2
-
         totem.update()
 
         time.sleep(0.04)
