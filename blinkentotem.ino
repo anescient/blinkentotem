@@ -57,7 +57,6 @@ void loop() {
 
     if(Serial.readBytes(buf, RGBW_SIZE) != RGBW_SIZE) { return; }
     if(do_rgb && Serial.readBytes(buf + RGBW_SIZE, RGB_SIZE) != RGB_SIZE) { return; }
-    digitalWrite(13, HIGH);
 
     int buf_i = 0;
     for(int i = 0; i < RGBW_COUNT; i++) {
@@ -67,7 +66,9 @@ void loop() {
       int w = buf[buf_i++];
       rgbwpix.setPixelColor(i, g, r, b, w);
     }
+    digitalWrite(13, HIGH);
     rgbwpix.show();
+    digitalWrite(13, LOW);
 
     if(do_rgb) {
       for(int i = 0; i < RGB_COUNT; i++) {
@@ -76,7 +77,9 @@ void loop() {
         int b = buf[buf_i++];
         rgbpix.setPixelColor(i, r, g, b);
       }
+      digitalWrite(13, HIGH);
       rgbpix.show();
+      digitalWrite(13, LOW);
     }
 
   } else {
