@@ -13,21 +13,31 @@ Adafruit_NeoPixel rgbpix;
 #define RGBW_SIZE   (RGBW_COUNT * 4)
 char buf[RGB_SIZE + RGBW_SIZE];
 
-void offline() {
+void showRGB() {
+  digitalWrite(13, HIGH);
+  rgbpix.show();
   digitalWrite(13, LOW);
-  for(int i = 0; i < RGBW_COUNT; i++)
-    rgbwpix.setPixelColor(i, 0, 0, 0, 0);
-  rgbwpix.show();
+}
 
-  for(int i = 0; i < RGB_COUNT; i++)
-    rgbpix.setPixelColor(i, 0, 0, 0);
+void showRGBW() {
+  digitalWrite(13, HIGH);
+  rgbwpix.show();
+  digitalWrite(13, LOW);
+}
+
+void offline() {
+  rgbwpix.clear();
+  showRGBW();
+
+  rgbpix.clear();
   rgbpix.setPixelColor(0, 20, 0, 0);
   rgbpix.setPixelColor(1, 20, 0, 0);
-  rgbpix.show();
+  showRGB();
 }
 
 void setup() {
   pinMode(13, OUTPUT);
+  digitalWrite(13, LOW);
 
   pinMode(RGBW_PIN, OUTPUT);
   rgbwpix = Adafruit_NeoPixel(RGBW_COUNT, RGBW_PIN, NEO_RGBW);
@@ -66,9 +76,7 @@ void loop() {
       int w = buf[buf_i++];
       rgbwpix.setPixelColor(i, g, r, b, w);
     }
-    digitalWrite(13, HIGH);
-    rgbwpix.show();
-    digitalWrite(13, LOW);
+    showRGBW();
 
     if(do_rgb) {
       for(int i = 0; i < RGB_COUNT; i++) {
@@ -77,9 +85,7 @@ void loop() {
         int b = buf[buf_i++];
         rgbpix.setPixelColor(i, r, g, b);
       }
-      digitalWrite(13, HIGH);
-      rgbpix.show();
-      digitalWrite(13, LOW);
+      showRGB();
     }
 
   } else {
