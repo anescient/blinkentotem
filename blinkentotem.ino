@@ -13,6 +13,8 @@ Adafruit_NeoPixel rgbpix;
 #define RGBW_SIZE   (RGBW_COUNT * 4)
 char buf[RGB_SIZE + RGBW_SIZE];
 
+unsigned int idlecycles;
+
 void showRGB() {
   digitalWrite(13, HIGH);
   rgbpix.show();
@@ -36,6 +38,8 @@ void offline() {
 }
 
 void setup() {
+  idlecycles = 0;
+
   pinMode(13, OUTPUT);
   digitalWrite(13, LOW);
 
@@ -49,11 +53,17 @@ void setup() {
 
   offline();
 
-  Serial.setTimeout(750);
+  Serial.setTimeout(10);
   Serial.begin(115200);
 }
 
 void loop() {
+  if(idlecycles > 100) {
+    offline();
+    idlecycles = 0;
+    return;
+  }
+
   if(Serial.find("np")) {
     if(Serial.readBytes(buf, 1) != 1) { return; }
     bool do_rgb;
@@ -88,7 +98,8 @@ void loop() {
       showRGB();
     }
 
+    idlecycles = 0;
   } else {
-    offline();
+    idlecycles++;
   }
 }
