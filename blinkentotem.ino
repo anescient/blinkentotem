@@ -6,34 +6,61 @@
 #define RGB_PIN     11
 #define RGB_COUNT   8
 
-Adafruit_NeoPixel rgbwpix;
-Adafruit_NeoPixel rgbpix;
+struct rgb_t {
+  char r;
+  char g;
+  char b;
+};
+rgb_t rgb[RGB_COUNT];
+#define RGB_SIZE (RGB_COUNT * sizeof(rgb_t))
 
-#define RGB_SIZE    (RGB_COUNT * 3)
-#define RGBW_SIZE   (RGBW_COUNT * 4)
-char buf[RGB_SIZE + RGBW_SIZE];
+struct rgbw_t {
+  char r;
+  char g;
+  char b;
+  char w;
+};
+rgbw_t rgbw[RGBW_COUNT];
+#define RGBW_SIZE (RGBW_COUNT * sizeof(rgbw_t))
+
+#define HEADER_MAXSIZE  4
+char header[HEADER_MAXSIZE];
+
+Adafruit_NeoPixel rgbpix;
+Adafruit_NeoPixel rgbwpix;
 
 unsigned int idlecycles;
 
 void showRGB() {
+  for(int i = 0; i < RGB_COUNT; i++) {
+    rgb_t & c = rgb[i];
+    rgbpix.setPixelColor(i, c.r, c.g, c.b);
+  }
   digitalWrite(13, HIGH);
   rgbpix.show();
   digitalWrite(13, LOW);
 }
 
 void showRGBW() {
+  for(int i = 0; i < RGBW_COUNT; i++) {
+    rgbw_t & c = rgbw[i];
+    rgbwpix.setPixelColor(i, c.g, c.r, c.b, c.w);
+  }
   digitalWrite(13, HIGH);
   rgbwpix.show();
   digitalWrite(13, LOW);
 }
 
-void offline() {
-  rgbwpix.clear();
-  showRGBW();
+void clear() {
+  memset(rgb, 0, RGB_SIZE);
+  memset(rgbw, 0, RGBW_SIZE);
+}
 
-  rgbpix.clear();
-  rgbpix.setPixelColor(0, 20, 0, 0);
-  rgbpix.setPixelColor(1, 20, 0, 0);
+void offline() {
+  clear();
+  showRGBW();
+  rgb[0].r = 20;
+  rgb[1].r = 20;
   showRGB();
 }
 
@@ -46,7 +73,7 @@ void setup() {
   pinMode(RGBW_PIN, OUTPUT);
   rgbwpix = Adafruit_NeoPixel(RGBW_COUNT, RGBW_PIN, NEO_RGBW);
   rgbwpix.begin();
-  
+
   pinMode(RGB_PIN, OUTPUT);
   rgbpix = Adafruit_NeoPixel(RGB_COUNT, RGB_PIN);
   rgbpix.begin();
@@ -64,38 +91,24 @@ void loop() {
     return;
   }
 
-  if(Serial.find("np")) {
-    if(Serial.readBytes(buf, 1) != 1) { return; }
-    bool do_rgb;
-    if(buf[0] == '1') {
-      do_rgb = false;
-    } else if(buf[0] == '2') {
-      do_rgb = true;
-    } else {
+  if(Serial.find('$')) {
+    int headersize = Serial.readBytesUntil('\0', header, HEADER_MAXSIZE);
+    if(headersize == 0)
       return;
-    }
 
-    if(Serial.readBytes(buf, RGBW_SIZE) != RGBW_SIZE) { return; }
-    if(do_rgb && Serial.readBytes(buf + RGBW_SIZE, RGB_SIZE) != RGB_SIZE) { return; }
+    switch(header[0]) {
+      case '1':
+        if(Serial.readBytes((char*)rgb, RGB_SIZE) == RGB_SIZE)
+          showRGB();
+        break;
 
-    int buf_i = 0;
-    for(int i = 0; i < RGBW_COUNT; i++) {
-      int r = buf[buf_i++];
-      int g = buf[buf_i++];
-      int b = buf[buf_i++];
-      int w = buf[buf_i++];
-      rgbwpix.setPixelColor(i, g, r, b, w);
-    }
-    showRGBW();
+      case '2':
+        if(Serial.readBytes((char*)rgbw, RGBW_SIZE) == RGBW_SIZE)
+          showRGBW();
+        break;
 
-    if(do_rgb) {
-      for(int i = 0; i < RGB_COUNT; i++) {
-        int r = buf[buf_i++];
-        int g = buf[buf_i++];
-        int b = buf[buf_i++];
-        rgbpix.setPixelColor(i, r, g, b);
-      }
-      showRGB();
+      default:
+        break;
     }
 
     idlecycles = 0;

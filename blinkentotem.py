@@ -192,24 +192,23 @@ class Totem:
 
     def update(self):
 
-        packet = [ord(c) for c in 'np1']
+        packet = [ord(c) for c in '$2\0']
         for rbgw in self.cpus:
             rbgw.extend_packet(packet)
-
-        rgbpacket = []
-        for rgb in self.lamps:
-            rgb.extend_packet(rgbpacket)
-        for rgb in self.aux:
-            rgb.extend_packet(rgbpacket)
-        for rgb in self.raid:
-            rgb.extend_packet(rgbpacket)
-        if rgbpacket != self._lastrgb:
-            self._lastrgb = rgbpacket
-            packet[2] = ord('2')
-            packet.extend(rgbpacket)
-
         self._serial.write(packet)
         self._serial.flush()
+
+        packet = [ord(c) for c in '$1\0']
+        for rgb in self.lamps:
+            rgb.extend_packet(packet)
+        for rgb in self.aux:
+            rgb.extend_packet(packet)
+        for rgb in self.raid:
+            rgb.extend_packet(packet)
+        if packet != self._lastrgb:
+            self._lastrgb = packet
+            self._serial.write(packet)
+            self._serial.flush()
 
 
 def main():
