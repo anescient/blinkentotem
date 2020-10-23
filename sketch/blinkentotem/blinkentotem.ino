@@ -1,63 +1,19 @@
 
-#include <Adafruit_NeoPixel.h>
 #include "hwconfig.h"
+#include "comm.h"
+#include "pixels.h"
 
-struct rgb_t {
-  char r;
-  char g;
-  char b;
-};
-rgb_t rgb[RGB_COUNT];
-#define RGB_SIZE (RGB_COUNT * sizeof(rgb_t))
-
-struct rgbw_t {
-  char r;
-  char g;
-  char b;
-  char w;
-};
-rgbw_t rgbw[RGBW_COUNT];
-#define RGBW_SIZE (RGBW_COUNT * sizeof(rgbw_t))
-
-#define HEADER_MAXSIZE  4
-char header[HEADER_MAXSIZE];
-
-Adafruit_NeoPixel rgbpix;
-Adafruit_NeoPixel rgbwpix;
+Comm comm;
+Pixels pixels;
 
 unsigned int idlecycles;
 
-void showRGB() {
-  for(int i = 0; i < RGB_COUNT; i++) {
-    rgb_t & c = rgb[i];
-    rgbpix.setPixelColor(i, c.r, c.g, c.b);
-  }
-  digitalWrite(13, HIGH);
-  rgbpix.show();
-  digitalWrite(13, LOW);
-}
-
-void showRGBW() {
-  for(int i = 0; i < RGBW_COUNT; i++) {
-    rgbw_t & c = rgbw[i];
-    rgbwpix.setPixelColor(i, c.g, c.r, c.b, c.w);
-  }
-  digitalWrite(13, HIGH);
-  rgbwpix.show();
-  digitalWrite(13, LOW);
-}
-
-void clear() {
-  memset(rgb, 0, RGB_SIZE);
-  memset(rgbw, 0, RGBW_SIZE);
-}
-
 void offline() {
-  clear();
-  showRGBW();
-  rgb[0].r = 20;
-  rgb[1].r = 20;
-  showRGB();
+  pixels.clear();
+  pixels.showRGBW();
+  pixels.rgb[0].r = 20;
+  pixels.rgb[1].r = 20;
+  pixels.showRGB();
 }
 
 void setup() {
@@ -66,18 +22,10 @@ void setup() {
   pinMode(13, OUTPUT);
   digitalWrite(13, LOW);
 
-  pinMode(RGBW_PIN, OUTPUT);
-  rgbwpix = Adafruit_NeoPixel(RGBW_COUNT, RGBW_PIN, NEO_RGBW);
-  rgbwpix.begin();
-
-  pinMode(RGB_PIN, OUTPUT);
-  rgbpix = Adafruit_NeoPixel(RGB_COUNT, RGB_PIN);
-  rgbpix.begin();
-
+  pixels.begin();
   offline();
 
-  Serial.setTimeout(10);
-  Serial.begin(115200);
+  comm.begin(10);
 }
 
 void loop() {
@@ -87,28 +35,21 @@ void loop() {
     return;
   }
 
-  if(Serial.find('$')) {
-    int headersize = Serial.readBytesUntil('\0', header, HEADER_MAXSIZE);
-    if(headersize == 0)
+  switch(comm.getData()) {
+    default:
+    case NONE:
+      idlecycles++;
       return;
 
-    switch(header[0]) {
-      case '1':
-        if(Serial.readBytes((char*)rgb, RGB_SIZE) == RGB_SIZE)
-          showRGB();
-        break;
+    case RGBFRAME:
+      comm.exportrgb(pixels.rgb);
+      pixels.showRGB();
+      break;
 
-      case '2':
-        if(Serial.readBytes((char*)rgbw, RGBW_SIZE) == RGBW_SIZE)
-          showRGBW();
-        break;
-
-      default:
-        break;
-    }
-
-    idlecycles = 0;
-  } else {
-    idlecycles++;
+    case RGBWFRAME:
+      comm.exportrgbw(pixels.rgbw);
+      pixels.showRGBW();
+      break;
   }
+  idlecycles = 0;
 }
