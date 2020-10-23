@@ -25,7 +25,7 @@ void setup() {
   pixels.begin();
   offline();
 
-  comm.begin(10);
+  comm.begin();
 }
 
 void loop() {
@@ -35,7 +35,7 @@ void loop() {
     return;
   }
 
-  switch(comm.getData()) {
+  switch(comm.getData(10)) {
     default:
     case NONE:
       idlecycles++;

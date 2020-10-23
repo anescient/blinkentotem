@@ -35,9 +35,9 @@
 
     public:
 
-      void begin(int timeoutms);
+      void begin();
 
-      datatype_t getData();
+      datatype_t getData(int timeoutms);
 
       void exportrgb(rgb_t * dest);
 
