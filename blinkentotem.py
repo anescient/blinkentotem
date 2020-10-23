@@ -256,7 +256,7 @@ def main():
         activity = diskactivities[rootdevice]
         led1, led2 = totem.aux
         led1.setrgb(28, 33, 15)
-        led2.setrgb(15, 17, 7)
+        led2.setrgb(15, 17, 4)
         led1.push()
         led2.push()
 
