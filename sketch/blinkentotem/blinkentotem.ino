@@ -38,7 +38,7 @@ void loop() {
 
   unsigned long dt = ms - lastms;
   lastms = ms;
-  char dt8 = dt > 255 ? 255 : dt;
+  uint8_t dt8 = dt > 255 ? 255 : dt;
 
   if(idlecycles > 100) {
     offline();

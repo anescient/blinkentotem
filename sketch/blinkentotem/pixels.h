@@ -18,13 +18,13 @@
           uint16_t phase;
 
         public:
-          char velocity;
-          char b_min;
-          char b_max;
+          uint8_t velocity;
+          uint8_t b_min;
+          uint8_t b_max;
 
           void setParams(const spin_params_t & params);
 
-          void step(char dt);
+          void step(uint8_t dt);
 
           bool exportrgbw(rgbw_t & rgbw);
 
@@ -43,7 +43,7 @@
 
       void setSpins(spin_params_t * spins);
 
-      void step(char dt);
+      void step(uint8_t dt);
 
       void showRGB();
 

@@ -18,30 +18,30 @@
   };
 
   struct rgb_t {
-    char r;
-    char g;
-    char b;
+    uint8_t r;
+    uint8_t g;
+    uint8_t b;
   };
   #define RGB_SIZE (RGB_COUNT * sizeof(rgb_t))
 
   struct rgbw_t {
-    char r;
-    char g;
-    char b;
-    char w;
+    uint8_t r;
+    uint8_t g;
+    uint8_t b;
+    uint8_t w;
   };
   #define RGBW_SIZE (RGBW_COUNT * sizeof(rgbw_t))
 
   struct spin_params_t {
-    char frequency;
-    char b_min;
-    char b_max;
+    uint8_t frequency;
+    uint8_t b_min;
+    uint8_t b_max;
   };
   #define SPIN_SIZE (RGBW_COUNT * sizeof(spin_params_t))
 
   class Comm {
     private:
-      char buffer[COMMS_BUFFER_SIZE];
+      uint8_t buffer[COMMS_BUFFER_SIZE];
 
     public:
 

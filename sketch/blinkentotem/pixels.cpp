@@ -7,12 +7,13 @@ void Pixels::Spinner::setParams(const spin_params_t & params) {
   b_max = params.b_max;
 }
 
-void Pixels::Spinner::step(char dt) {
+void Pixels::Spinner::step(uint8_t dt) {
   phase += ((uint16_t)velocity) * dt;
 }
 
 bool Pixels::Spinner::exportrgbw(rgbw_t & rgbw) {
-  char b = Adafruit_NeoPixel::gamma8(Adafruit_NeoPixel::sine8(phase >> 8));
+  uint8_t x = phase >> 8;
+  uint8_t b = x < 128 ? x : 255 - x;
   if(b == rgbw.b)
     return false;
   rgbw.b = b;
@@ -45,7 +46,7 @@ void Pixels::setSpins(spin_params_t * spins) {
     spinners[i].setParams(spins[i]);
 }
 
-void Pixels::step(char dt) {
+void Pixels::step(uint8_t dt) {
   bool changed = false;
   for(int i = 0; i < RGBW_COUNT; i++) {
     Spinner & spinner = spinners[i];
