@@ -174,7 +174,7 @@ class Totem:
             packet.extend([self.r, self.g, self.b])
 
     def __init__(self, serialport):
-        self._serial = serial.Serial(serialport, 115200)
+        self._serial = serial.Serial(serialport, 56000)
         self._lastrgb = None
         self.cpus = [self.RGBWled() for _ in range(8)]
         self.raid = [self.RGBled() for _ in range(4)]

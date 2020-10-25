@@ -2,7 +2,8 @@
 #include "comm.h"
 
 void Comm::begin() {
-  Serial.begin(115200);
+  // 56k is the highest it goes without dropping bits
+  Serial.begin(56000);
 }
 
 datatype_t Comm::getData(int timeoutms) {
@@ -13,11 +14,11 @@ datatype_t Comm::getData(int timeoutms) {
       return NONE;
     switch(buffer[0]) {
       case '1':
-        if(Serial.readBytes((char*)buffer, RGB_SIZE) == RGB_SIZE)
+        if(Serial.readBytes(buffer, RGB_SIZE) == RGB_SIZE)
           return RGBFRAME;
 
       case '2':
-        if(Serial.readBytes((char*)buffer, RGBW_SIZE) == RGBW_SIZE)
+        if(Serial.readBytes(buffer, RGBW_SIZE) == RGBW_SIZE)
           return RGBWFRAME;
     }
   }

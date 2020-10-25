@@ -5,6 +5,7 @@
   #include "hwconfig.h"
   #include <HardwareSerial.h>
 
+  // rgbw is the largest
   #define COMMS_BUFFER_SIZE RGBW_SIZE
 
   enum datatype_t {
