@@ -173,32 +173,43 @@ class Totem:
         def extend_packet(self, packet):
             packet.extend([self.r, self.g, self.b])
 
+    class Spinner:
+        def __init__(self):
+            self.frequency = 0
+            self.b_min = 0
+            self.b_max = 0
+
+        def extend_packet(self, packet):
+            packet.extend([self.frequency, self.b_min, self.b_max])
+
     def __init__(self, serialport):
+        self._leadin = '$'
         self._serial = serial.Serial(serialport, 56000)
+        self._lastrgbw = None
         self._lastrgb = None
+        self._lastspins = None
         self.cpus = [self.RGBWled() for _ in range(8)]
+        self.spinners = [self.Spinner() for _ in range(8)]
         self.raid = [self.RGBled() for _ in range(4)]
         self.aux = [self.RGBled() for _ in range(2)]
         self.lamps = [self.RGBled() for _ in range(2)]
 
         # arduino resets when comms begin
         # gotta wait for the bootloader to timeout and run the rom
-        self.update()
+        self.ping()
         time.sleep(0.4)
         self.update()
 
     def __del__(self):
         self._serial.close()
 
+    def ping(self):
+        self._send([ord(c) for c in self._leadin + ' \0'])
+
     def update(self):
+        noop = True
 
-        packet = [ord(c) for c in '$2\0']
-        for rbgw in self.cpus:
-            rbgw.extend_packet(packet)
-        self._serial.write(packet)
-        self._serial.flush()
-
-        packet = [ord(c) for c in '$1\0']
+        packet = [ord(c) for c in self._leadin + '1\0']
         for rgb in self.lamps:
             rgb.extend_packet(packet)
         for rgb in self.aux:
@@ -207,12 +218,38 @@ class Totem:
             rgb.extend_packet(packet)
         if packet != self._lastrgb:
             self._lastrgb = packet
-            self._serial.write(packet)
-            self._serial.flush()
+            self._send(packet)
+            noop = False
+
+        packet = [ord(c) for c in self._leadin + '2\0']
+        for rbgw in self.cpus:
+            rbgw.extend_packet(packet)
+        if packet != self._lastrgbw:
+            self._lastrgbw = packet
+            self._send(packet)
+            noop = False
+
+        packet = [ord(c) for c in self._leadin + 's\0']
+        for spin in self.spinners:
+            spin.extend_packet(packet)
+        if packet != self._lastspins:
+            self._lastspins = packet
+            self._send(packet)
+            noop = False
+
+        if noop:
+            self.ping()
+
+    def _send(self, packet):
+        self._serial.write(packet)
+        self._serial.flush()
 
 
 def main():
     totem = Totem('/dev/ttyUSB0')
+    totem.spinners[0].frequency = 70
+    totem.spinners[0].b_min = 20
+    totem.spinners[0].b_max = 150
 
     totem.lamps[0].r = totem.lamps[1].r = 30
     totem.lamps[0].g = totem.lamps[1].g = 15
