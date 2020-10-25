@@ -8,12 +8,16 @@ void Pixels::Spinner::setParams(const spin_params_t & params) {
 }
 
 void Pixels::Spinner::step(uint8_t dt) {
-  phase += ((uint16_t)velocity) * dt;
+  if(dt > 40)
+    dt = 40;
+  phase += ((uint16_t)velocity) * 6 * dt;
 }
 
 bool Pixels::Spinner::exportrgbw(rgbw_t & rgbw) {
-  uint8_t x = phase >> 8;
-  uint8_t b = x < 128 ? x : 255 - x;
+  uint16_t x = phase >> 7;
+  x = x < 256 ? x : 511 - x; // sawtooth
+  x = b_min + ((x * (b_max - b_min)) >> 8);
+  uint8_t b = Adafruit_NeoPixel::gamma8(x);
   if(b == rgbw.b)
     return false;
   rgbw.b = b;
