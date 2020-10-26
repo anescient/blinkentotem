@@ -68,10 +68,8 @@ void Pixels::showRGB() {
     rgb_t & c = rgb[i];
     rgbpix.setPixelColor(i, c.r, c.g, c.b);
   }
-  digitalWrite(13, HIGH);
   waitForPixels();
   rgbpix.show();
-  digitalWrite(13, LOW);
 }
 
 void Pixels::showRGBW() {
@@ -82,10 +80,8 @@ void Pixels::showRGBW() {
       spinners[i].exportrgbw(c);
     rgbwpix.setPixelColor(i, c.g, c.r, c.b, c.w);
   }
-  digitalWrite(13, HIGH);
   waitForPixels();
   rgbwpix.show();
-  digitalWrite(13, LOW);
 }
 
 void Pixels::clear() {

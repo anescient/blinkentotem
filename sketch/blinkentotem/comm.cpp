@@ -28,6 +28,10 @@ datatype_t Comm::getData(int timeoutms) {
         if(Serial.readBytes(buffer, SPIN_SIZE) == SPIN_SIZE)
           return SPINS;
     }
+
+    digitalWrite(13, HIGH);
+    delay(500);
+    digitalWrite(13, LOW);
   }
   return NONE;
 }

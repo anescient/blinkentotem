@@ -5,7 +5,7 @@
 Comm comm;
 Pixels pixels;
 
-unsigned int idlecycles;
+uint16_t idlecycles;
 unsigned long lastms;
 
 void offline() {
