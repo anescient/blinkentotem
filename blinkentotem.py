@@ -112,7 +112,6 @@ class CPUIndicator:
     bluecurve.addPoint(1.0, 1.0)
 
     def __init__(self):
-        self.phase = 0  # [0.0, 1.0)
         self.velocity = 0  # nominally in [0.0, 1.0]
         self.laggingvelocity = 0
         self.heat = 0
@@ -130,16 +129,18 @@ class CPUIndicator:
         self.heat *= 0.999 - 0.04 * self.heat
 
         self.velocity = 0.8 * self.velocity + 0.2 * cpuactivity.busy
-        self.laggingvelocity = 0.97 * self.laggingvelocity + 0.03 * self.velocity
-        self.phase = (self.phase + 0.7 * self.velocity) % 1.0
+        self.laggingvelocity = 0.9 * self.laggingvelocity + 0.1 * self.velocity
 
         self.ioflag = cpuactivity.io > 0.1 and 4 * cpuactivity.io > cpuactivity.busy
 
     def set_led(self, led):
         led.r = unitToByte(self.heatcurve.sample(self.heat * 8))
         led.g = 100 if self.ioflag else 0
-        v = 2 * (self.phase if self.phase < 0.5 else 1.0 - self.phase)
-        led.b = unitToByte(self.laggingvelocity ** 2 * v)
+
+    def set_spinner(self, spin):
+        spin.frequency = unitToByte(0.8 * self.velocity)
+        spin.b_min = unitToByte(0.1 + 0.4 * self.laggingvelocity)
+        spin.b_max = unitToByte(0.1 + 0.8 * self.laggingvelocity)
 
 
 class Totem:
@@ -247,9 +248,6 @@ class Totem:
 
 def main():
     totem = Totem('/dev/ttyUSB0')
-    totem.spinners[0].frequency = 70
-    totem.spinners[0].b_min = 20
-    totem.spinners[0].b_max = 150
 
     totem.lamps[0].r = totem.lamps[1].r = 30
     totem.lamps[0].g = totem.lamps[1].g = 15
@@ -279,8 +277,9 @@ def main():
         for activity, indicator in zip(cpuactivites, cpuindicators):
             indicator.update(activity)
 
-        for indicator, led in zip(cpuindicators, totem.cpus):
+        for indicator, led, spin in zip(cpuindicators, totem.cpus, totem.spinners):
             indicator.set_led(led)
+            indicator.set_spinner(spin)
 
         for device, led in zip(raiddevices, totem.raid):
             activity = diskactivities[device]
