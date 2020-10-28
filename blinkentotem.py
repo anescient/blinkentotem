@@ -115,7 +115,7 @@ class CPUIndicator:
         self.velocity = 0  # nominally in [0.0, 1.0]
         self.laggingvelocity = 0
         self.heat = 0
-        self.ioflag = False
+        self.io = 0
 
     def update(self, cpuactivity):
         if cpuactivity.busy > 0.2:
@@ -127,15 +127,14 @@ class CPUIndicator:
         if self.heat > 1:
             self.heat = 1
         self.heat *= 0.999 - 0.04 * self.heat
+        self.io = cpuactivity.io
 
         self.velocity = 0.8 * self.velocity + 0.2 * cpuactivity.busy
         self.laggingvelocity = 0.9 * self.laggingvelocity + 0.1 * self.velocity
 
-        self.ioflag = cpuactivity.io > 0.1 and 4 * cpuactivity.io > cpuactivity.busy
-
     def set_led(self, led):
         led.r = unitToByte(self.heatcurve.sample(self.heat * 8))
-        led.g = 100 if self.ioflag else 0
+        led.g = unitToByte(0.5 * self.io ** 2)
 
     def set_spinner(self, spin):
         spin.frequency = unitToByte(0.8 * self.velocity)
