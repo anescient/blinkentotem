@@ -14,7 +14,12 @@
     PING, // watchdog reset
     RGBFRAME, // data for entire rgb string
     RGBWFRAME, // data for entire rgbw string
-    SPINS // data for spin params
+    SPINS, // data for spin params
+    CPU_RED, // 8 bytes, rgbw string red
+    CPU_GREEN, // 8 bytes, rgbw string green
+    LAMPS, // rgb[0] to rgb[1]
+    DRUM, // rgb[2] to rgb[3]
+    RAID // rgb[4] to rgb[7]
   };
 
   struct rgb_t {
@@ -49,10 +54,18 @@
 
       datatype_t getData(int timeoutms);
 
+      spin_params_t * getSpinParams();
+
       void exportrgb(rgb_t * dest);
+
+      void exportrgb(rgb_t * dest, size_t index);
 
       void exportrgbw(rgbw_t * dest);
 
-      spin_params_t * getSpinParams();
+      void exportrgbw(rgbw_t * dest, size_t index);
+
+      void exportrgbw_red(rgbw_t * dest);
+
+      void exportrgbw_green(rgbw_t * dest);
   };
 #endif

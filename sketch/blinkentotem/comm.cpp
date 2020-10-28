@@ -7,43 +7,95 @@ void Comm::begin() {
 }
 
 datatype_t Comm::getData(int timeoutms) {
+  datatype_t datatype = NONE;
+  size_t datasize = 0;
   Serial.setTimeout(timeoutms);
   if(Serial.find('$')) {
-    int headersize = Serial.readBytesUntil('\0', buffer, COMMS_BUFFER_SIZE);
+    size_t headersize = Serial.readBytesUntil('\0', buffer, COMMS_BUFFER_SIZE);
     if(headersize == 0)
       return NONE;
     switch(buffer[0]) {
       case ' ':
-        return PING;
+        datatype = PING;
+        break;
 
       case '1':
-        if(Serial.readBytes(buffer, RGB_SIZE) == RGB_SIZE)
-          return RGBFRAME;
+        datatype = RGBFRAME;
+        datasize = RGB_SIZE;
+        break;
 
       case '2':
-        if(Serial.readBytes(buffer, RGBW_SIZE) == RGBW_SIZE)
-          return RGBWFRAME;
+        datatype = RGBWFRAME;
+        datasize = RGBW_SIZE;
+        break;
 
       case 's':
-        if(Serial.readBytes(buffer, SPIN_SIZE) == SPIN_SIZE)
-          return SPINS;
+        datatype = SPINS;
+        datasize = SPIN_SIZE;
+        break;
+
+      case 'h':
+        datatype = CPU_RED;
+        datasize = 8;
+        break;
+
+      case 'i':
+        datatype = CPU_GREEN;
+        datasize = 8;
+        break;
+
+      case 'l':
+        datatype = LAMPS;
+        datasize = 2 * sizeof(rgb_t);
+        break;
+
+      case 'd':
+        datatype = DRUM;
+        datasize = 2 * sizeof(rgb_t);
+        break;
+
+      case 'r':
+        datatype = RAID;
+        datasize = 4 * sizeof(rgb_t);
+        break;
     }
 
-    digitalWrite(13, HIGH);
-    delay(500);
-    digitalWrite(13, LOW);
+    if(datasize > 0 && Serial.readBytes(buffer, datasize) != datasize) {
+      datatype = NONE;
+      digitalWrite(13, HIGH);
+      delay(500);
+      digitalWrite(13, LOW);
+    }
   }
-  return NONE;
+  return datatype;
+}
+
+spin_params_t * Comm::getSpinParams() {
+  return (spin_params_t*)buffer;
 }
 
 void Comm::exportrgb(rgb_t * dest) {
   memcpy(dest, buffer, RGB_SIZE);
 }
 
+void Comm::exportrgb(rgb_t * dest, size_t index) {
+  dest[index] = ((rgb_t*)buffer)[index];
+}
+
 void Comm::exportrgbw(rgbw_t * dest) {
   memcpy(dest, buffer, RGBW_SIZE);
 }
 
-spin_params_t * Comm::getSpinParams() {
-  return (spin_params_t*)buffer;
+void Comm::exportrgbw(rgbw_t * dest, size_t index) {
+  dest[index] = ((rgbw_t*)buffer)[index];
+}
+
+void Comm::exportrgbw_red(rgbw_t * dest) {
+  for(int i = 0; i < RGBW_COUNT; i++)
+    dest[i].r = buffer[i];
+}
+
+void Comm::exportrgbw_green(rgbw_t * dest) {
+  for(int i = 0; i < RGBW_COUNT; i++)
+    dest[i].g = buffer[i];
 }
