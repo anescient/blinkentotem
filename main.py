@@ -105,13 +105,6 @@ class CPUIndicator:
     heatcurve.addPoint(0.9, 0.5)
     heatcurve.addPoint(1.0, 1.0)
 
-    bluecurve = UnitCurve()
-    bluecurve.addPoint(0, 0)
-    bluecurve.addPoint(0.25, 0.02)
-    bluecurve.addPoint(0.35, 0.05)
-    bluecurve.addPoint(0.75, 0.4)
-    bluecurve.addPoint(1.0, 1.0)
-
     def __init__(self):
         self.velocity = 0  # nominally in [0.0, 1.0]
         self.laggingvelocity = 0
