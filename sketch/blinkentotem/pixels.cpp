@@ -1,16 +1,10 @@
 
 #include "pixels.h"
 
-void Pixels::Spinner::setParams(const spin_params_t & params) {
-  velocity = params.frequency;
-  b_min = params.b_min;
-  b_max = params.b_max;
-}
-
 void Pixels::Spinner::step(uint8_t dt) {
   if(dt > 40)
     dt = 40;
-  phase += ((uint16_t)velocity) * 6 * dt;
+  phase += ((uint16_t)frequency) * 6 * dt;
 }
 
 bool Pixels::Spinner::exportrgbw(rgbw_t & rgbw) {
@@ -18,6 +12,8 @@ bool Pixels::Spinner::exportrgbw(rgbw_t & rgbw) {
   x = x < 256 ? x : 511 - x; // sawtooth
   x = b_min + ((x * (b_max - b_min)) >> 8);
   uint8_t b = Adafruit_NeoPixel::gamma8(x);
+  if(x > 0 && b == 0)
+    b = 1;
   if(b == rgbw.b)
     return false;
   rgbw.b = b;
@@ -25,7 +21,7 @@ bool Pixels::Spinner::exportrgbw(rgbw_t & rgbw) {
 }
 
 void Pixels::Spinner::clear() {
-  velocity = 0;
+  frequency = 0;
   b_min = 0;
   b_max = 0;
 }
@@ -45,16 +41,25 @@ void Pixels::begin() {
   rgbpix.begin();
 }
 
-void Pixels::setSpins(spin_params_t * spins) {
-  for(int i = 0; i < RGBW_COUNT; i++)
-    spinners[i].setParams(spins[i]);
+void Pixels::updateSpins(spin_t * spins) {
+  for(int i = 0; i < RGBW_COUNT; i++) {
+    spin_t & s = spins[i];
+    Spinner & spnr = spinners[i];
+    spnr.frequency = s.frequency;
+    spnr.b_max = s.brightness;
+    spnr.b_min = s.brightness / 4;
+    if(spnr.b_min < 1)
+      spnr.b_min = 1;
+    if(spnr.b_max < spnr.b_min)
+      spnr.b_max = spnr.b_min;
+  }
 }
 
 void Pixels::step(uint8_t dt) {
   bool changed = false;
   for(int i = 0; i < RGBW_COUNT; i++) {
     Spinner & spinner = spinners[i];
-    if(spinner.velocity != 0) {
+    if(spinner.frequency != 0) {
       spinner.step(dt);
       changed |= spinner.exportrgbw(rgbw[i]);
     }
@@ -76,7 +81,7 @@ void Pixels::showRGBW() {
   for(int i = 0; i < RGBW_COUNT; i++) {
     rgbw_t c = rgbw[i];
     Spinner & spinner = spinners[i];
-    if(spinner.velocity != 0)
+    if(spinner.frequency != 0)
       spinners[i].exportrgbw(c);
     rgbwpix.setPixelColor(i, c.g, c.r, c.b, c.w);
   }

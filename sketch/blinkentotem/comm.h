@@ -14,7 +14,7 @@
     PING, // watchdog reset
     RGBFRAME, // data for entire rgb string
     RGBWFRAME, // data for entire rgbw string
-    SPINS, // data for spin params
+    CPU_BLUE, // data for spins on rgbw blue
     CPU_RED, // 8 bytes, rgbw string red
     CPU_GREEN, // 8 bytes, rgbw string green
     LAMPS, // rgb[0] to rgb[1]
@@ -37,12 +37,10 @@
   };
   #define RGBW_SIZE (RGBW_COUNT * sizeof(rgbw_t))
 
-  struct spin_params_t {
+  struct spin_t {
     uint8_t frequency;
-    uint8_t b_min;
-    uint8_t b_max;
+    uint8_t brightness;
   };
-  #define SPIN_SIZE (RGBW_COUNT * sizeof(spin_params_t))
 
   class Comm {
     private:
@@ -54,7 +52,7 @@
 
       datatype_t getData(int timeoutms);
 
-      spin_params_t * getSpinParams();
+      spin_t * getSpins();
 
       void exportrgb(rgb_t * dest);
 

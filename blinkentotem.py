@@ -38,11 +38,11 @@ class Totem:
     class Spinner:
         def __init__(self):
             self.frequency = 0
-            self.b_min = 0
-            self.b_max = 0
+            self.brightness = 0
 
         def extend_packet(self, packet):
-            packet.extend([self.frequency, self.b_min, self.b_max])
+            packet.append(self.frequency)
+            packet.append(self.brightness)
 
     def __init__(self, serialport='/dev/ttyUSB0'):
         self._leadin = '$'

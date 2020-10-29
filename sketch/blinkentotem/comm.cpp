@@ -21,27 +21,27 @@ datatype_t Comm::getData(int timeoutms) {
 
       case '1':
         datatype = RGBFRAME;
-        datasize = RGB_SIZE;
+        datasize = RGB_COUNT * sizeof(rgb_t);
         break;
 
       case '2':
         datatype = RGBWFRAME;
-        datasize = RGBW_SIZE;
+        datasize = RGBW_COUNT * sizeof(rgbw_t);
         break;
 
       case 's':
-        datatype = SPINS;
-        datasize = SPIN_SIZE;
+        datatype = CPU_BLUE;
+        datasize = RGBW_COUNT * sizeof(spin_t);
         break;
 
       case 'h':
         datatype = CPU_RED;
-        datasize = 8;
+        datasize = RGBW_COUNT;
         break;
 
       case 'i':
         datatype = CPU_GREEN;
-        datasize = 8;
+        datasize = RGBW_COUNT;
         break;
 
       case 'l':
@@ -70,8 +70,8 @@ datatype_t Comm::getData(int timeoutms) {
   return datatype;
 }
 
-spin_params_t * Comm::getSpinParams() {
-  return (spin_params_t*)buffer;
+spin_t * Comm::getSpins() {
+  return ((spin_t*)buffer);
 }
 
 void Comm::exportrgb(rgb_t * dest) {

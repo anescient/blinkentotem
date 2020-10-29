@@ -123,7 +123,7 @@ class CPUIndicator:
         self.heat *= 0.999 - 0.04 * self.heat
         self.io = cpuactivity.io
 
-        self.velocity = 0.8 * self.velocity + 0.2 * cpuactivity.busy
+        self.velocity = 0.7 * self.velocity + 0.3 * cpuactivity.busy
         self.laggingvelocity = 0.9 * self.laggingvelocity + 0.1 * self.velocity
 
     def set_led(self, led):
@@ -131,11 +131,8 @@ class CPUIndicator:
         led.g = unitToByte(0.5 * self.io ** 2)
 
     def set_spinner(self, spin):
-        spin.frequency = unitToByte(0.8 * self.velocity)
-        spin.b_min = unitToByte(0.1 + 0.4 * self.laggingvelocity)
-        spin.b_max = unitToByte(0.1 + 0.8 * self.laggingvelocity)
-
-
+        spin.frequency = max(1, unitToByte(0.1 + 0.9 * self.velocity))
+        spin.brightness = max(4, unitToByte(0.1 + 0.9 * self.laggingvelocity))
 
 
 def main():

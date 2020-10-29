@@ -18,11 +18,9 @@
           uint16_t phase;
 
         public:
-          uint8_t velocity;
+          uint8_t frequency;
           uint8_t b_min;
           uint8_t b_max;
-
-          void setParams(const spin_params_t & params);
 
           void step(uint8_t dt);
 
@@ -41,7 +39,7 @@
 
       void begin();
 
-      void setSpins(spin_params_t * spins);
+      void updateSpins(spin_t * spins);
 
       void step(uint8_t dt);
 

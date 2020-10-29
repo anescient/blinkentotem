@@ -66,8 +66,8 @@ void loop() {
       pixels.showRGBW();
       break;
 
-    case SPINS:
-      pixels.setSpins(comm.getSpinParams());
+    case CPU_BLUE:
+      pixels.updateSpins(comm.getSpins());
       break;
 
     case CPU_RED:
