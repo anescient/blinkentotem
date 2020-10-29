@@ -46,7 +46,7 @@ void loop() {
     return;
   }
 
-  switch(comm.getData(10)) {
+  switch(comm.receive(10)) {
     default:
     case NONE:
       idlecycles++;
@@ -57,45 +57,33 @@ void loop() {
       break;
 
     case RGBFRAME:
-      comm.exportrgb(pixels.rgb);
+      pixels.updateRGB(comm.buffer.rgb);
       pixels.showRGB();
       break;
 
     case RGBWFRAME:
-      comm.exportrgbw(pixels.rgbw);
+      pixels.updateRGBW(comm.buffer.rgbw);
       pixels.showRGBW();
       break;
 
     case CPU_BLUE:
-      pixels.updateSpins(comm.getSpins());
+      pixels.updateSpins(comm.buffer.spins);
+      pixels.showRGBW();
       break;
 
     case CPU_RED:
-      comm.exportrgbw_red(pixels.rgbw);
-      pixels.showRGBW();
       break;
 
     case CPU_GREEN:
-      comm.exportrgbw_green(pixels.rgbw);
-      pixels.showRGBW();
       break;
 
     case LAMPS:
-      comm.exportrgb(pixels.rgb, 0);
-      comm.exportrgb(pixels.rgb, 1);
-      pixels.showRGB();
       break;
 
     case DRUM:
-      comm.exportrgb(pixels.rgb, 2);
-      comm.exportrgb(pixels.rgb, 3);
-      pixels.showRGB();
       break;
 
     case RAID:
-      for(int i = 0; i < 4; i++)
-        comm.exportrgb(pixels.rgb, i);
-      pixels.showRGB();
       break;
   }
   idlecycles = 0;

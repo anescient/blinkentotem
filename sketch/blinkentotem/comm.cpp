@@ -6,17 +6,16 @@ void Comm::begin() {
   Serial.begin(56000);
 }
 
-datatype_t Comm::getData(int timeoutms) {
+datatype_t Comm::receive(int timeoutms) {
   datatype_t datatype = NONE;
   size_t datasize = 0;
   Serial.setTimeout(timeoutms);
   if(Serial.find('$')) {
-    size_t headersize = Serial.readBytesUntil('\0', buffer, COMMS_BUFFER_SIZE);
+    size_t headersize = Serial.readBytesUntil('\0', buffer.bytes, COMMS_BUFFER_SIZE);
     if(headersize == 0)
       return NONE;
-    switch(buffer[0]) {
+    switch(buffer.command) {
       case ' ':
-        datatype = PING;
         break;
 
       case '1':
@@ -60,7 +59,7 @@ datatype_t Comm::getData(int timeoutms) {
         break;
     }
 
-    if(datasize > 0 && Serial.readBytes(buffer, datasize) != datasize) {
+    if(datasize > 0 && Serial.readBytes(buffer.bytes, datasize) != datasize) {
       datatype = NONE;
       digitalWrite(13, HIGH);
       delay(500);
@@ -68,34 +67,4 @@ datatype_t Comm::getData(int timeoutms) {
     }
   }
   return datatype;
-}
-
-spin_t * Comm::getSpins() {
-  return ((spin_t*)buffer);
-}
-
-void Comm::exportrgb(rgb_t * dest) {
-  memcpy(dest, buffer, RGB_SIZE);
-}
-
-void Comm::exportrgb(rgb_t * dest, size_t index) {
-  dest[index] = ((rgb_t*)buffer)[index];
-}
-
-void Comm::exportrgbw(rgbw_t * dest) {
-  memcpy(dest, buffer, RGBW_SIZE);
-}
-
-void Comm::exportrgbw(rgbw_t * dest, size_t index) {
-  dest[index] = ((rgbw_t*)buffer)[index];
-}
-
-void Comm::exportrgbw_red(rgbw_t * dest) {
-  for(int i = 0; i < RGBW_COUNT; i++)
-    dest[i].r = buffer[i];
-}
-
-void Comm::exportrgbw_green(rgbw_t * dest) {
-  for(int i = 0; i < RGBW_COUNT; i++)
-    dest[i].g = buffer[i];
 }

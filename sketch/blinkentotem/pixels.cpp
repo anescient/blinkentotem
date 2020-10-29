@@ -41,6 +41,16 @@ void Pixels::begin() {
   rgbpix.begin();
 }
 
+void Pixels::updateRGB(rgb_t * rgbframe) {
+  for(int i = 0; i < RGB_COUNT; i++)
+    rgb[i] = rgbframe[i];
+}
+
+void Pixels::updateRGBW(rgbw_t * rgbwframe) {
+  for(int i = 0; i < RGBW_COUNT; i++)
+    rgbw[i] = rgbwframe[i];
+}
+
 void Pixels::updateSpins(spin_t * spins) {
   for(int i = 0; i < RGBW_COUNT; i++) {
     spin_t & s = spins[i];
@@ -90,8 +100,8 @@ void Pixels::showRGBW() {
 }
 
 void Pixels::clear() {
-  memset(rgb, 0, RGB_SIZE);
-  memset(rgbw, 0, RGBW_SIZE);
+  memset(rgb, 0, RGB_COUNT * sizeof(rgb_t));
+  memset(rgbw, 0, RGBW_COUNT * sizeof(rgbw_t));
   for(int i = 0; i < RGBW_COUNT; i++)
     spinners[i].clear();
 }

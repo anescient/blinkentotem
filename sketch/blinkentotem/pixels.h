@@ -39,6 +39,10 @@
 
       void begin();
 
+      void updateRGB(rgb_t * rgbframe);
+
+      void updateRGBW(rgbw_t * rgbwframe);
+
       void updateSpins(spin_t * spins);
 
       void step(uint8_t dt);
