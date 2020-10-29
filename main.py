@@ -146,7 +146,7 @@ class CPUIndicator:
 
 
 def main():
-    totem = Totem('/dev/ttyUSB0')
+    totem = Totem()
 
     totem.lamps[0].r = totem.lamps[1].r = 30
     totem.lamps[0].g = totem.lamps[1].g = 15

@@ -44,7 +44,7 @@ class Totem:
         def extend_packet(self, packet):
             packet.extend([self.frequency, self.b_min, self.b_max])
 
-    def __init__(self, serialport):
+    def __init__(self, serialport='/dev/ttyUSB0'):
         self._leadin = '$'
         self._serial = serial.Serial(serialport, 56000)
         self._lastrgbw = None
