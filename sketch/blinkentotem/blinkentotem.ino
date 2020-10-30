@@ -40,7 +40,7 @@ void loop() {
   lastms = ms;
   uint8_t dt8 = dt > 255 ? 255 : dt;
 
-  if(idlecycles > 100) {
+  if(idlecycles > 400) {
     offline();
     idlecycles = 0;
     return;

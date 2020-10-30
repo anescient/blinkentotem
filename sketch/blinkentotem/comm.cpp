@@ -16,6 +16,7 @@ datatype_t Comm::receive(int timeoutms) {
       return NONE;
     switch(buffer.command) {
       case ' ':
+        datatype = PING;
         break;
 
       case '1':
