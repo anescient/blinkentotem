@@ -41,7 +41,13 @@
 
       void updateRGB(rgb_t * rgbframe);
 
+      void updateRGB(rgb_t * rgbframe, size_t skip, size_t count);
+
       void updateRGBW(rgbw_t * rgbwframe);
+
+      void updateRGBW_R(uint8_t * red);
+
+      void updateRGBW_G(uint8_t * green);
 
       void updateSpins(spin_t * spins);
 

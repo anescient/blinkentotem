@@ -13,7 +13,7 @@
     PING, // watchdog reset
     RGBFRAME, // data for entire rgb string
     RGBWFRAME, // data for entire rgbw string
-    CPU_BLUE, // data for spins on rgbw blue
+    CPU_SPIN, // data for spins on rgbw blue
     CPU_RED, // 8 bytes, rgbw string red
     CPU_GREEN, // 8 bytes, rgbw string green
     LAMPS, // rgb[0] to rgb[1]

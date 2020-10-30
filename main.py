@@ -106,14 +106,19 @@ class CPUIndicator:
     heatcurve.addPoint(1.0, 1.0)
 
     def __init__(self):
-        self.velocity = 0  # nominally in [0.0, 1.0]
-        self.laggingvelocity = 0
-        self.heat = 0
+        self.busy = 0
         self.io = 0
+        self.heat = 0
+        self.busyLagA = 0
+        self.busyLagB = 0
 
     def update(self, cpuactivity):
-        if cpuactivity.busy > 0.2:
-            t = (cpuactivity.busy - 0.3) / 0.7
+        self.busy = cpuactivity.busy
+        self.io = cpuactivity.io
+
+    def step(self):
+        if self.busy > 0.2:
+            t = (self.busy - 0.3) / 0.7
             if t >= self.heat:
                 self.heat += (0.05 * (t - self.heat)) ** 2
         if self.heat < 0:
@@ -121,18 +126,17 @@ class CPUIndicator:
         if self.heat > 1:
             self.heat = 1
         self.heat *= 0.999 - 0.04 * self.heat
-        self.io = cpuactivity.io
 
-        self.velocity = 0.7 * self.velocity + 0.3 * cpuactivity.busy
-        self.laggingvelocity = 0.9 * self.laggingvelocity + 0.1 * self.velocity
+        self.busyLagA = 0.7 * self.busyLagA + 0.3 * self.busy
+        self.busyLagB = 0.9 * self.busyLagB + 0.1 * self.busyLagA
 
     def set_led(self, led):
         led.r = unitToByte(self.heatcurve.sample(self.heat * 8))
         led.g = unitToByte(0.5 * self.io ** 2)
 
     def set_spinner(self, spin):
-        spin.frequency = max(1, unitToByte(0.1 + 0.9 * self.velocity))
-        spin.brightness = max(4, unitToByte(0.1 + 0.9 * self.laggingvelocity))
+        spin.frequency = max(1, unitToByte(0.1 + 0.9 * self.busyLagA))
+        spin.brightness = max(4, unitToByte(0.1 + 0.9 * self.busyLagB))
 
 
 def main():
@@ -141,7 +145,7 @@ def main():
     totem.lamps[0].r = totem.lamps[1].r = 30
     totem.lamps[0].g = totem.lamps[1].g = 15
     totem.lamps[0].b = totem.lamps[1].b = 25
-    totem.update()
+    totem.pushPieces()
 
     raiddevices = ['sdb', 'sdc', 'sdd', 'sde']
     rootdevice = 'sda'
@@ -165,8 +169,9 @@ def main():
 
         for activity, indicator in zip(cpuactivites, cpuindicators):
             indicator.update(activity)
+            indicator.step()
 
-        for indicator, led, spin in zip(cpuindicators, totem.cpus, totem.spinners):
+        for indicator, led, spin in zip(cpuindicators, totem.rgbw, totem.spinners):
             indicator.set_led(led)
             indicator.set_spinner(spin)
 
@@ -179,9 +184,9 @@ def main():
                 led.r = 5
 
         activity = diskactivities[rootdevice]
-        led1, led2 = totem.aux
+        led1, led2 = totem.drum
         led1.setrgb(28, 33, 15)
-        led2.setrgb(15, 17, 4)
+        led2.setrgb(15, 17, 7)
         led1.push()
         led2.push()
 
@@ -193,11 +198,11 @@ def main():
             b.setrgb(255, 0, 0)
             a.r = 0
 
-        totem.update()
+        totem.pushPieces()
         time.sleep(0.001)
         led1.pop()
         led2.pop()
-        totem.update()
+        totem.pushPieces()
 
         time.sleep(0.01)
 
@@ -205,9 +210,12 @@ def main():
         led2.setrgb(15, 17, 7)
         for led in totem.raid:
             led.g = 2
-        totem.update()
+        totem.pushPieces()
 
         time.sleep(0.04)
+
+        if frame % 30 == 0:
+            totem.ping()
 
     return 0
 

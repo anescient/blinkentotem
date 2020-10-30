@@ -30,7 +30,7 @@ datatype_t Comm::receive(int timeoutms) {
         break;
 
       case 's':
-        datatype = CPU_BLUE;
+        datatype = CPU_SPIN;
         datasize = RGBW_COUNT * sizeof(spin_t);
         break;
 
@@ -44,9 +44,9 @@ datatype_t Comm::receive(int timeoutms) {
         datasize = RGBW_COUNT;
         break;
 
-      case 'l':
-        datatype = LAMPS;
-        datasize = 2 * sizeof(rgb_t);
+      case 'r':
+        datatype = RAID;
+        datasize = 4 * sizeof(rgb_t);
         break;
 
       case 'd':
@@ -54,16 +54,16 @@ datatype_t Comm::receive(int timeoutms) {
         datasize = 2 * sizeof(rgb_t);
         break;
 
-      case 'r':
-        datatype = RAID;
-        datasize = 4 * sizeof(rgb_t);
+      case 'l':
+        datatype = LAMPS;
+        datasize = 2 * sizeof(rgb_t);
         break;
     }
 
     if(datasize > 0 && Serial.readBytes(buffer.bytes, datasize) != datasize) {
       datatype = NONE;
       digitalWrite(13, HIGH);
-      delay(500);
+      delay(53);
       digitalWrite(13, LOW);
     }
   }

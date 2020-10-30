@@ -42,13 +42,27 @@ void Pixels::begin() {
 }
 
 void Pixels::updateRGB(rgb_t * rgbframe) {
-  for(int i = 0; i < RGB_COUNT; i++)
-    rgb[i] = rgbframe[i];
+  updateRGB(rgbframe, 0, RGB_COUNT);
+}
+
+void Pixels::updateRGB(rgb_t * rgbframe, size_t skip, size_t count) {
+  for(int i = 0; i < count; i++)
+    rgb[i + skip] = rgbframe[i];
 }
 
 void Pixels::updateRGBW(rgbw_t * rgbwframe) {
   for(int i = 0; i < RGBW_COUNT; i++)
     rgbw[i] = rgbwframe[i];
+}
+
+void Pixels::updateRGBW_R(uint8_t * red) {
+  for(int i = 0; i < RGBW_COUNT; i++)
+    rgbw[i].r = red[i];
+}
+
+void Pixels::updateRGBW_G(uint8_t * green) {
+  for(int i = 0; i < RGBW_COUNT; i++)
+    rgbw[i].g = green[i];
 }
 
 void Pixels::updateSpins(spin_t * spins) {

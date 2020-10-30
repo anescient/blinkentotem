@@ -40,7 +40,7 @@ void loop() {
   lastms = ms;
   uint8_t dt8 = dt > 255 ? 255 : dt;
 
-  if(idlecycles > 400) {
+  if(idlecycles > 200) {
     offline();
     idlecycles = 0;
     return;
@@ -66,24 +66,34 @@ void loop() {
       pixels.showRGBW();
       break;
 
-    case CPU_BLUE:
+    case CPU_SPIN:
       pixels.updateSpins(comm.buffer.spins);
       pixels.showRGBW();
       break;
 
     case CPU_RED:
+      pixels.updateRGBW_R(comm.buffer.bytes);
+      pixels.showRGBW();
       break;
 
     case CPU_GREEN:
-      break;
-
-    case LAMPS:
-      break;
-
-    case DRUM:
+      pixels.updateRGBW_G(comm.buffer.bytes);
+      pixels.showRGBW();
       break;
 
     case RAID:
+      pixels.updateRGB(comm.buffer.rgb, 4, 4);
+      pixels.showRGB();
+      break;
+
+    case DRUM:
+      pixels.updateRGB(comm.buffer.rgb, 2, 2);
+      pixels.showRGB();
+      break;
+
+    case LAMPS:
+      pixels.updateRGB(comm.buffer.rgb, 0, 2);
+      pixels.showRGB();
       break;
   }
   idlecycles = 0;

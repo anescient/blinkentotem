@@ -1,10 +1,35 @@
 #!/usr/bin/env python3
 
+from collections import namedtuple
 import time
 import serial
 
 
 class Totem:
+
+    _leadin = ord('$')
+
+    class _Endpoint:
+        def __init__(self, addr):
+            self._addr = addr
+            self.dirty = False
+            self._data = None
+
+        def updateRaw(self, data):
+            self.dirty |= data != self._data
+            self._data = data
+
+        def update(self, items):
+            data = []
+            for item in items:
+                data.extend(item.getPayload())
+            self.updateRaw(data)
+
+        def write(self, _serial):
+            if self._data is None:
+                self._data = []
+            _serial.write([Totem._leadin, ord(self._addr), 0] + self._data)
+            self.dirty = False
 
     class RGBWled:
         def __init__(self):
@@ -13,8 +38,8 @@ class Totem:
             self.b = 0
             self.w = 0
 
-        def extend_packet(self, packet):
-            packet.extend([self.r, self.g, self.b, self.w])
+        def getPayload(self):
+            return [self.r, self.g, self.b, self.w]
 
     class RGBled:
         def __init__(self):
@@ -26,82 +51,79 @@ class Totem:
         def setrgb(self, r, g, b):
             self.r, self.g, self.b = r, g, b
 
+        def getPayload(self):
+            return [self.r, self.g, self.b]
+
         def push(self):
             self._stack.append((self.r, self.g, self.b))
 
         def pop(self):
             self.r, self.g, self.b = self._stack.pop()
 
-        def extend_packet(self, packet):
-            packet.extend([self.r, self.g, self.b])
-
     class Spinner:
         def __init__(self):
             self.frequency = 0
             self.brightness = 0
 
-        def extend_packet(self, packet):
-            packet.append(self.frequency)
-            packet.append(self.brightness)
+        def getPayload(self):
+            return [self.frequency, self.brightness]
 
     def __init__(self, serialport='/dev/ttyUSB0'):
-        self._leadin = '$'
         self._serial = serial.Serial(serialport, 56000)
-        self._lastrgbw = None
-        self._lastrgb = None
-        self._lastspins = None
-        self.cpus = [self.RGBWled() for _ in range(8)]
-        self.spinners = [self.Spinner() for _ in range(8)]
-        self.raid = [self.RGBled() for _ in range(4)]
-        self.aux = [self.RGBled() for _ in range(2)]
-        self.lamps = [self.RGBled() for _ in range(2)]
+        self.rgbw = [self.RGBWled() for _ in range(8)]
+        self.spinners = [self.Spinner() for _ in self.rgbw]
+        self.rgb = [self.RGBled() for _ in range(8)]
+        self.raid = self.rgb[4:8]
+        self.drum = self.rgb[2:4]
+        self.lamps = self.rgb[0:2]
+
+        self._ep = namedtuple('Endpoints', 'rgb rgbw spins red green raid drum lamps')
+        self._ep.rgb = self._Endpoint('1')
+        self._ep.rgbw = self._Endpoint('2')
+        self._ep.spins = self._Endpoint('s')
+        self._ep.red = self._Endpoint('h')
+        self._ep.green = self._Endpoint('i')
+        self._ep.raid = self._Endpoint('r')
+        self._ep.drum = self._Endpoint('d')
+        self._ep.lamps = self._Endpoint('l')
 
         # arduino resets when comms begin
         # gotta wait for the bootloader to timeout and run the rom
         self.ping()
         time.sleep(0.4)
-        self.update()
+        self.pushFrames(True)
 
     def __del__(self):
         self._serial.close()
 
+    # WDT reset
     def ping(self):
-        self._send([ord(c) for c in self._leadin + ' \0'])
-
-    def update(self):
-        noop = True
-
-        packet = [ord(c) for c in self._leadin + '1\0']
-        for rgb in self.lamps:
-            rgb.extend_packet(packet)
-        for rgb in self.aux:
-            rgb.extend_packet(packet)
-        for rgb in self.raid:
-            rgb.extend_packet(packet)
-        if packet != self._lastrgb:
-            self._lastrgb = packet
-            self._send(packet)
-            noop = False
-
-        packet = [ord(c) for c in self._leadin + '2\0']
-        for rbgw in self.cpus:
-            rbgw.extend_packet(packet)
-        if packet != self._lastrgbw:
-            self._lastrgbw = packet
-            self._send(packet)
-            noop = False
-
-        packet = [ord(c) for c in self._leadin + 's\0']
-        for spin in self.spinners:
-            spin.extend_packet(packet)
-        if packet != self._lastspins:
-            self._lastspins = packet
-            self._send(packet)
-            noop = False
-
-        if noop:
-            self.ping()
-
-    def _send(self, packet):
-        self._serial.write(packet)
+        self._serial.write([self._leadin, ord(' '), 0])
         self._serial.flush()
+
+    def pushFrames(self, force=False):
+        self._ep.rgb.update(self.rgb)
+        self._ep.rgbw.update(self.rgbw)
+        updated = False
+        for ep in [self._ep.rgb, self._ep.rgbw]:
+            if ep.dirty or force:
+                ep.write(self._serial)
+                self._serial.flush()
+                updated = True
+        return updated
+
+    def pushPieces(self, force=False):
+        self._ep.spins.update(self.spinners)
+        self._ep.red.updateRaw([rgbw.r for rgbw in self.rgbw])
+        self._ep.green.updateRaw([rgbw.g for rgbw in self.rgbw])
+        self._ep.raid.update(self.raid)
+        self._ep.drum.update(self.drum)
+        self._ep.lamps.update(self.lamps)
+        updated = False
+        for ep in [self._ep.spins, self._ep.red, self._ep.green,
+                   self._ep.raid, self._ep.drum, self._ep.lamps]:
+            if ep.dirty or force:
+                ep.write(self._serial)
+                self._serial.flush()
+                updated = True
+        return updated
