@@ -46,7 +46,7 @@ datatype_t Comm::receive(int timeoutms) {
 
       case 'r':
         datatype = RAID;
-        datasize = 4 * sizeof(rgb_t);
+        datasize = RAID_COUNT * sizeof(rgb_t);
         break;
 
       case 'd':
@@ -57,6 +57,11 @@ datatype_t Comm::receive(int timeoutms) {
       case 'l':
         datatype = LAMPS;
         datasize = 2 * sizeof(rgb_t);
+        break;
+
+      case 'f':
+        datatype = RAIDSTAT;
+        datasize = RAID_COUNT * sizeof(diskstat_t);
         break;
     }
 

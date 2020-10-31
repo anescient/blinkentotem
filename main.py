@@ -142,32 +142,34 @@ class CPUIndicator:
 def main():
     totem = Totem()
 
-    totem.lamps[0].r = totem.lamps[1].r = 30
-    totem.lamps[0].g = totem.lamps[1].g = 15
-    totem.lamps[0].b = totem.lamps[1].b = 25
+    for led in totem.lamps:
+        led.setrgb(30, 15, 25)
     totem.pushPieces()
+
+    for led in totem.raid:
+        led.g = 2
 
     raiddevices = ['sdb', 'sdc', 'sdd', 'sde']
     rootdevice = 'sda'
 
-    cpuactivites = [CPUActivity(i) for i in range(8)]
+    cpuactivities = [CPUActivity(i) for i in range(8)]
     diskactivities = {device: DiskActivity() for device in [rootdevice] + raiddevices}
 
-    cpuindicators = [CPUIndicator() for _ in cpuactivites]
+    cpuindicators = [CPUIndicator() for _ in cpuactivities]
 
     frame = 0
     while True:
         frame += 1
 
         cputimes = psutil.cpu_times(percpu=True)
-        for activity in cpuactivites:
+        for activity in cpuactivities:
             activity.update(cputimes)
 
         diskcounters = psutil.disk_io_counters(perdisk=True, nowrap=True)
         for device, activity in diskactivities.items():
             activity.update(diskcounters[device])
 
-        for activity, indicator in zip(cpuactivites, cpuindicators):
+        for activity, indicator in zip(cpuactivities, cpuindicators):
             indicator.update(activity)
             indicator.step()
 
@@ -175,21 +177,17 @@ def main():
             indicator.set_led(led)
             indicator.set_spinner(spin)
 
-        for device, led in zip(raiddevices, totem.raid):
+        for device, stat in zip(raiddevices, totem.raidstat):
             activity = diskactivities[device]
-            led.setrgb(0, 2, 0)
-            if activity.bytesread > 0 or activity.byteswritten > 0:
-                led.g = 30
-            if activity.byteswritten > 0:
-                led.r = 5
+            stat.read = 0
+            if activity.bytesread > 0:
+                stat.read = 1
+            stat.write = 0#activity.byteswritten // 10000
 
         activity = diskactivities[rootdevice]
         led1, led2 = totem.drum
         led1.setrgb(28, 33, 15)
         led2.setrgb(15, 17, 7)
-        led1.push()
-        led2.push()
-
         a, b = (led1, led2) if frame % 2 else (led2, led1)
         if activity.bytesread > 0:
             a.setrgb(0, 255, 0)
@@ -199,20 +197,7 @@ def main():
             a.r = 0
 
         totem.pushPieces()
-        time.sleep(0.001)
-        led1.pop()
-        led2.pop()
-        totem.pushPieces()
-
-        time.sleep(0.01)
-
-        led1.setrgb(28, 33, 15)
-        led2.setrgb(15, 17, 7)
-        for led in totem.raid:
-            led.g = 2
-        totem.pushPieces()
-
-        time.sleep(0.04)
+        time.sleep(0.05)
 
         if frame % 30 == 0:
             totem.ping()

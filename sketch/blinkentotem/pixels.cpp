@@ -7,7 +7,7 @@ void Pixels::Spinner::step(uint8_t dt) {
   phase += ((uint16_t)frequency) * 6 * dt;
 }
 
-bool Pixels::Spinner::exportrgbw(rgbw_t & rgbw) {
+bool Pixels::Spinner::exportBlue(rgbw_t & rgbw) {
   uint16_t x = phase >> 7;
   x = x < 256 ? x : 511 - x; // sawtooth
   x = b_min + ((x * (b_max - b_min)) >> 8);
@@ -24,6 +24,19 @@ void Pixels::Spinner::clear() {
   frequency = 0;
   b_min = 0;
   b_max = 0;
+}
+
+bool Pixels::RaidFlash::step() {
+  if(red > 0)
+    red--;
+  if(green > 0)
+    green--;
+  return true;
+}
+
+void Pixels::RaidFlash::clear() {
+  red = 0;
+  green = 0;
 }
 
 void Pixels::waitForPixels() {
@@ -79,17 +92,33 @@ void Pixels::updateSpins(spin_t * spins) {
   }
 }
 
+void Pixels::updateRaid(diskstat_t * diskstats) {
+  for(int i = 0; i < RAID_COUNT; i++) {
+    diskstat_t & stat = diskstats[i];
+    RaidFlash & flash = raidFlash[i];
+    flash.green = stat.read;
+    flash.red = stat.write;
+  }
+}
+
 void Pixels::step(uint8_t dt) {
   bool changed = false;
   for(int i = 0; i < RGBW_COUNT; i++) {
     Spinner & spinner = spinners[i];
     if(spinner.frequency != 0) {
       spinner.step(dt);
-      changed |= spinner.exportrgbw(rgbw[i]);
+      changed |= spinner.exportBlue(rgbw[i]);
     }
   }
   if(changed)
     showRGBW();
+  changed = false;
+  for(int i = 0; i < RAID_COUNT; i++) {
+    RaidFlash & flash = raidFlash[i];
+    changed |= flash.step();
+  }
+  if(changed)
+    showRGB();
 }
 
 void Pixels::showRGB() {
@@ -97,6 +126,13 @@ void Pixels::showRGB() {
   for(int i = 0; i < RGB_COUNT; i++) {
     rgb_t & c = rgb[i];
     rgbpix.setPixelColor(i, c.r, c.g, c.b);
+  }
+  for(int i = 0; i < RAID_COUNT; i++) {
+    RaidFlash & flash = raidFlash[i];
+    rgb_t & c = rgb[RAID_OFFSET + i];
+    uint8_t r = flash.red ? 30 : c.r;
+    uint8_t g = flash.green ? 20 : c.g;
+    rgbpix.setPixelColor(RAID_OFFSET + i, r, g, c.b);
   }
   rgbpix.show();
 }
@@ -107,7 +143,7 @@ void Pixels::showRGBW() {
     rgbw_t c = rgbw[i];
     Spinner & spinner = spinners[i];
     if(spinner.frequency != 0)
-      spinners[i].exportrgbw(c);
+      spinners[i].exportBlue(c);
     rgbwpix.setPixelColor(i, c.g, c.r, c.b, c.w);
   }
   rgbwpix.show();
@@ -118,4 +154,6 @@ void Pixels::clear() {
   memset(rgbw, 0, RGBW_COUNT * sizeof(rgbw_t));
   for(int i = 0; i < RGBW_COUNT; i++)
     spinners[i].clear();
+  for(int i = 0; i < RAID_COUNT; i++)
+    raidFlash[i].clear();
 }

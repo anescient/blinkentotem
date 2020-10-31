@@ -8,28 +8,40 @@
 
   class Pixels {
     private:
-      // multiple instances of this thing kinda works
-      // they seem to share memory
+      // multiple instances of this thing almost works
+      // they seem to share memory (in a bad way)
       Adafruit_NeoPixel rgbpix;
       Adafruit_NeoPixel rgbwpix;
 
       class Spinner {
         private:
-          uint16_t phase;
+          uint16_t phase = 0;
 
         public:
-          uint8_t frequency;
-          uint8_t b_min;
-          uint8_t b_max;
+          uint8_t frequency = 0;
+          uint8_t b_min = 0;
+          uint8_t b_max = 0;
 
           void step(uint8_t dt);
 
-          bool exportrgbw(rgbw_t & rgbw);
+          bool exportBlue(rgbw_t & rgbw);
 
           void clear();
       };
 
       Spinner spinners[RGBW_COUNT];
+
+      class RaidFlash {
+        public:
+          uint8_t red = 0;
+          uint8_t green = 0;
+
+          bool step();
+
+          void clear();
+      };
+
+      RaidFlash raidFlash[RAID_COUNT];
 
       void waitForPixels();
 
@@ -50,6 +62,8 @@
       void updateRGBW_G(uint8_t * green);
 
       void updateSpins(spin_t * spins);
+
+      void updateRaid(diskstat_t * diskstats);
 
       void step(uint8_t dt);
 

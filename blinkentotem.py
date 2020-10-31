@@ -19,11 +19,13 @@ class Totem:
             self.dirty |= data != self._data
             self._data = data
 
-        def update(self, items):
+        def update(self, items, force=False):
             data = []
             for item in items:
                 data.extend(item.getPayload())
             self.updateRaw(data)
+            if force:
+                self.dirty = True
 
         def write(self, _serial):
             if self._data is None:
@@ -46,19 +48,12 @@ class Totem:
             self.r = 0
             self.g = 0
             self.b = 0
-            self._stack = []
 
         def setrgb(self, r, g, b):
             self.r, self.g, self.b = r, g, b
 
         def getPayload(self):
             return [self.r, self.g, self.b]
-
-        def push(self):
-            self._stack.append((self.r, self.g, self.b))
-
-        def pop(self):
-            self.r, self.g, self.b = self._stack.pop()
 
     class Spinner:
         def __init__(self):
@@ -68,6 +63,15 @@ class Totem:
         def getPayload(self):
             return [self.frequency, self.brightness]
 
+    class DiskStat:
+        def __init__(self):
+            self.read = 0
+            self.write = 0
+
+        def getPayload(self):
+            return [min(255, self.read),
+                    min(255, self.write)]
+
     def __init__(self, serialport='/dev/ttyUSB0'):
         self._serial = serial.Serial(serialport, 56000)
         self.rgbw = [self.RGBWled() for _ in range(8)]
@@ -76,8 +80,11 @@ class Totem:
         self.raid = self.rgb[4:8]
         self.drum = self.rgb[2:4]
         self.lamps = self.rgb[0:2]
+        self.raidstat = [self.DiskStat() for _ in self.raid]
 
-        self._ep = namedtuple('Endpoints', 'rgb rgbw spins red green raid drum lamps')
+        self._ep = namedtuple(
+            'Endpoints',
+            'rgb rgbw spins red green raid drum lamps raidstat')
         self._ep.rgb = self._Endpoint('1')
         self._ep.rgbw = self._Endpoint('2')
         self._ep.spins = self._Endpoint('s')
@@ -86,6 +93,7 @@ class Totem:
         self._ep.raid = self._Endpoint('r')
         self._ep.drum = self._Endpoint('d')
         self._ep.lamps = self._Endpoint('l')
+        self._ep.raidstat = self._Endpoint('f')
 
         # arduino resets when comms begin
         # gotta wait for the bootloader to timeout and run the rom
@@ -119,9 +127,11 @@ class Totem:
         self._ep.raid.update(self.raid)
         self._ep.drum.update(self.drum)
         self._ep.lamps.update(self.lamps)
+        self._ep.raidstat.update(self.raidstat, True)
         updated = False
         for ep in [self._ep.spins, self._ep.red, self._ep.green,
-                   self._ep.raid, self._ep.drum, self._ep.lamps]:
+                   self._ep.raid, self._ep.drum, self._ep.lamps,
+                   self._ep.raidstat]:
             if ep.dirty or force:
                 ep.write(self._serial)
                 self._serial.flush()

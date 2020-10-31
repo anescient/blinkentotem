@@ -82,7 +82,7 @@ void loop() {
       break;
 
     case RAID:
-      pixels.updateRGB(comm.buffer.rgb, 4, 4);
+      pixels.updateRGB(comm.buffer.rgb, RAID_OFFSET, RAID_COUNT);
       pixels.showRGB();
       break;
 
@@ -93,6 +93,11 @@ void loop() {
 
     case LAMPS:
       pixels.updateRGB(comm.buffer.rgb, 0, 2);
+      pixels.showRGB();
+      break;
+
+    case RAIDSTAT:
+      pixels.updateRaid(comm.buffer.raidstat);
       pixels.showRGB();
       break;
   }
