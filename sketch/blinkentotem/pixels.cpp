@@ -93,15 +93,16 @@ void Pixels::step(uint8_t dt) {
 }
 
 void Pixels::showRGB() {
+  waitForPixels();
   for(int i = 0; i < RGB_COUNT; i++) {
     rgb_t & c = rgb[i];
     rgbpix.setPixelColor(i, c.r, c.g, c.b);
   }
-  waitForPixels();
   rgbpix.show();
 }
 
 void Pixels::showRGBW() {
+  waitForPixels();
   for(int i = 0; i < RGBW_COUNT; i++) {
     rgbw_t c = rgbw[i];
     Spinner & spinner = spinners[i];
@@ -109,7 +110,6 @@ void Pixels::showRGBW() {
       spinners[i].exportrgbw(c);
     rgbwpix.setPixelColor(i, c.g, c.r, c.b, c.w);
   }
-  waitForPixels();
   rgbwpix.show();
 }
 
