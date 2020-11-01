@@ -6,6 +6,8 @@
   #include "hwconfig.h"
   #include "comm.h"
 
+  #define MAX_PULSE 1000
+
   class Pixels {
     private:
       // multiple instances of this thing almost works
@@ -33,15 +35,17 @@
 
       class RaidFlash {
         public:
-          uint8_t red = 0;
-          uint8_t green = 0;
+          uint16_t red = 0;
+          uint16_t green = 0;
 
-          bool step();
+          bool step(uint8_t dt);
 
           void clear();
       };
 
       RaidFlash raidFlash[RAID_COUNT];
+      uint8_t raidRed = 30;
+      uint8_t raidGreen = 70;
 
       void waitForPixels();
 
@@ -50,6 +54,8 @@
       rgbw_t rgbw[RGBW_COUNT];
 
       void begin();
+
+      void setConfig(config_t & config);
 
       void updateRGB(rgb_t * rgbframe);
 
@@ -63,7 +69,7 @@
 
       void updateSpins(spin_t * spins);
 
-      void updateRaid(diskstat_t * diskstats);
+      void updateRaid(iopulse_t * pulses);
 
       void step(uint8_t dt);
 

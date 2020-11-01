@@ -60,16 +60,19 @@ datatype_t Comm::receive(int timeoutms) {
         break;
 
       case 'f':
-        datatype = RAIDSTAT;
-        datasize = RAID_COUNT * sizeof(diskstat_t);
+        datatype = RAIDPULSE;
+        datasize = RAID_COUNT * sizeof(iopulse_t);
+        break;
+
+      case 'p':
+        datatype = CONFIG;
+        datasize = sizeof(config_t);
         break;
     }
 
     if(datasize > 0 && Serial.readBytes(buffer.bytes, datasize) != datasize) {
       datatype = NONE;
       digitalWrite(13, HIGH);
-      delay(53);
-      digitalWrite(13, LOW);
     }
   }
   return datatype;

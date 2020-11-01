@@ -46,7 +46,7 @@ void loop() {
     return;
   }
 
-  switch(comm.receive(10)) {
+  switch(comm.receive(5)) {
     default:
     case NONE:
       idlecycles++;
@@ -54,6 +54,10 @@ void loop() {
       return;
 
     case PING:
+      break;
+
+    case CONFIG:
+      pixels.setConfig(comm.buffer.config);
       break;
 
     case RGBFRAME:
@@ -96,8 +100,8 @@ void loop() {
       pixels.showRGB();
       break;
 
-    case RAIDSTAT:
-      pixels.updateRaid(comm.buffer.raidstat);
+    case RAIDPULSE:
+      pixels.updateRaid(comm.buffer.raidpulse);
       pixels.showRGB();
       break;
   }

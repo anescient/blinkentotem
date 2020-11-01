@@ -26,12 +26,25 @@ void Pixels::Spinner::clear() {
   b_max = 0;
 }
 
-bool Pixels::RaidFlash::step() {
-  if(red > 0)
-    red--;
-  if(green > 0)
-    green--;
-  return true;
+bool Pixels::RaidFlash::step(uint8_t dt) {
+  if(dt == 0)
+    return false;
+  bool zeroed = false;
+  if(red > 0) {
+    if(red < dt)
+      red = 0;
+    else
+      red -= dt;
+    zeroed |= red == 0;
+  }
+  if(green > 0) {
+    if(green < dt)
+      green = 0;
+    else
+      green -= dt;
+    zeroed |= green == 0;
+  }
+  return zeroed;
 }
 
 void Pixels::RaidFlash::clear() {
@@ -52,6 +65,11 @@ void Pixels::begin() {
   pinMode(RGB_PIN, OUTPUT);
   rgbpix = Adafruit_NeoPixel(RGB_COUNT, RGB_PIN);
   rgbpix.begin();
+}
+
+void Pixels::setConfig(config_t & config) {
+  raidRed = config.raidRed;
+  raidGreen = config.raidGreen;
 }
 
 void Pixels::updateRGB(rgb_t * rgbframe) {
@@ -92,12 +110,16 @@ void Pixels::updateSpins(spin_t * spins) {
   }
 }
 
-void Pixels::updateRaid(diskstat_t * diskstats) {
+void Pixels::updateRaid(iopulse_t * pulses) {
   for(int i = 0; i < RAID_COUNT; i++) {
-    diskstat_t & stat = diskstats[i];
+    iopulse_t & pulse = pulses[i];
     RaidFlash & flash = raidFlash[i];
-    flash.green = stat.read;
-    flash.red = stat.write;
+    flash.green += pulse.read;
+    if(flash.green > MAX_PULSE)
+      flash.green = MAX_PULSE;
+    flash.red += pulse.write;
+    if(flash.red > MAX_PULSE)
+      flash.red = MAX_PULSE;
   }
 }
 
@@ -115,7 +137,7 @@ void Pixels::step(uint8_t dt) {
   changed = false;
   for(int i = 0; i < RAID_COUNT; i++) {
     RaidFlash & flash = raidFlash[i];
-    changed |= flash.step();
+    changed |= flash.step(dt);
   }
   if(changed)
     showRGB();
@@ -130,8 +152,8 @@ void Pixels::showRGB() {
   for(int i = 0; i < RAID_COUNT; i++) {
     RaidFlash & flash = raidFlash[i];
     rgb_t & c = rgb[RAID_OFFSET + i];
-    uint8_t r = flash.red ? 30 : c.r;
-    uint8_t g = flash.green ? 20 : c.g;
+    uint8_t r = flash.red ? raidRed : c.r;
+    uint8_t g = flash.green ? raidGreen : c.g;
     rgbpix.setPixelColor(RAID_OFFSET + i, r, g, c.b);
   }
   rgbpix.show();

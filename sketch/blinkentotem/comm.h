@@ -19,7 +19,8 @@
     LAMPS, // rgb[0] to rgb[1]
     DRUM, // rgb[2] to rgb[3]
     RAID, // rgb[4] to rgb[7]
-    RAIDSTAT
+    RAIDPULSE, // iopulse_t[4]
+    CONFIG
   };
 
   // also used for framebuffer
@@ -37,12 +38,17 @@
     uint8_t w;
   };
 
+  struct config_t {
+    uint8_t raidRed;
+    uint8_t raidGreen;
+  };
+
   struct spin_t {
     uint8_t frequency;
     uint8_t brightness;
   };
 
-  struct diskstat_t {
+  struct iopulse_t {
     uint8_t read;
     uint8_t write;
   };
@@ -53,10 +59,11 @@
       union {
         uint8_t     bytes [COMMS_BUFFER_SIZE];
         char        command;
+        config_t    config;
         rgb_t       rgb [RGB_COUNT];
         rgbw_t      rgbw [RGBW_COUNT];
         spin_t      spins [RGBW_COUNT];
-        diskstat_t  raidstat [RAID_COUNT];
+        iopulse_t   raidpulse [RAID_COUNT];
       } buffer;
 
       void begin();
