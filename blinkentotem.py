@@ -125,8 +125,9 @@ class Totem:
         self._serial.write([self._leadin, ord(' '), 0])
         self._serial.flush()
 
-    def setRaidParams(self, red, green):
-        self._serial.write([self._leadin, ord('p'), 0, red, green])
+    def setParams(self, raidred, raidgreen, maxpulse):
+        self._serial.write([self._leadin, ord('p'), 0,
+                            raidred, raidgreen, maxpulse])
         self._serial.flush()
 
     def pushFrames(self, force=False):

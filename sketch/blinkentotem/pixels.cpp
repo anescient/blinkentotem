@@ -70,6 +70,7 @@ void Pixels::begin() {
 void Pixels::setConfig(config_t & config) {
   raidRed = config.raidRed;
   raidGreen = config.raidGreen;
+  maxPulse = ((uint16_t)config.maxPulse << 1);
 }
 
 void Pixels::updateRGB(rgb_t * rgbframe) {
@@ -115,11 +116,11 @@ void Pixels::updateRaid(iopulse_t * pulses) {
     iopulse_t & pulse = pulses[i];
     RaidFlash & flash = raidFlash[i];
     flash.green += pulse.read;
-    if(flash.green > MAX_PULSE)
-      flash.green = MAX_PULSE;
+    if(flash.green > maxPulse)
+      flash.green = maxPulse;
     flash.red += pulse.write;
-    if(flash.red > MAX_PULSE)
-      flash.red = MAX_PULSE;
+    if(flash.red > maxPulse)
+      flash.red = maxPulse;
   }
 }
 

@@ -41,6 +41,7 @@
   struct config_t {
     uint8_t raidRed;
     uint8_t raidGreen;
+    uint8_t maxPulse;
   };
 
   struct spin_t {
