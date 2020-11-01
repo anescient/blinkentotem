@@ -127,16 +127,23 @@ class CPUIndicator:
             self.heat = 1
         self.heat *= 0.999 - 0.04 * self.heat
 
-        self.busyLagA = 0.7 * self.busyLagA + 0.3 * self.busy
-        self.busyLagB = 0.9 * self.busyLagB + 0.1 * self.busyLagA
+        if self.busy > self.busyLagA:
+            self.busyLagA = 0.6 * self.busyLagA + 0.4 * self.busy
+        else:
+            self.busyLagA = 0.2 * self.busyLagA + 0.8 * self.busy
+
+        if self.busy > self.busyLagB:
+            self.busyLagB = 0.8 * self.busyLagB + 0.2 * self.busy
+        else:
+            self.busyLagB = 0.2 * self.busyLagB + 0.8 * self.busy
 
     def set_led(self, led):
         led.r = unitToByte(self.heatcurve.sample(self.heat * 8))
         led.g = unitToByte(0.5 * self.io ** 2)
 
     def set_spinner(self, spin):
-        spin.frequency = max(1, unitToByte(0.1 + 0.9 * self.busyLagA))
-        spin.brightness = max(4, unitToByte(0.1 + 0.9 * self.busyLagB))
+        spin.frequency = max(20, unitToByte(0.2 + 0.6 * self.busyLagA))
+        spin.brightness = max(8, unitToByte(0.1 + 0.9 * self.busyLagB))
 
 
 def main():
@@ -164,21 +171,22 @@ def main():
     while True:
         frame += 1
 
-        cputimes = psutil.cpu_times(percpu=True)
-        for activity in cpuactivities:
-            activity.update(cputimes)
+        if frame % 3 == 0:
+            cputimes = psutil.cpu_times(percpu=True)
+            for activity in cpuactivities:
+                activity.update(cputimes)
+
+            for activity, indicator in zip(cpuactivities, cpuindicators):
+                indicator.update(activity)
+                indicator.step()
+
+            for indicator, led, spin in zip(cpuindicators, totem.rgbw, totem.spinners):
+                indicator.set_led(led)
+                indicator.set_spinner(spin)
 
         diskcounters = psutil.disk_io_counters(perdisk=True, nowrap=True)
         for device, activity in diskactivities.items():
             activity.update(diskcounters[device])
-
-        for activity, indicator in zip(cpuactivities, cpuindicators):
-            indicator.update(activity)
-            indicator.step()
-
-        for indicator, led, spin in zip(cpuindicators, totem.rgbw, totem.spinners):
-            indicator.set_led(led)
-            indicator.set_spinner(spin)
 
         for device, pulse in zip(raiddevices, totem.raidpulse):
             activity = diskactivities[device]
