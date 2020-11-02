@@ -5,26 +5,18 @@
 Comm comm;
 Pixels pixels;
 
-uint16_t idlecycles;
+unsigned long idleTime;
 unsigned long lastms;
 
-void offline() {
-  pixels.clear();
-  pixels.showRGBW();
-  pixels.rgb[0].r = 20;
-  pixels.rgb[1].r = 20;
-  pixels.showRGB();
-}
-
 void setup() {
-  idlecycles = 0;
+  idleTime = 0;
   lastms = millis();
 
   pinMode(13, OUTPUT);
   digitalWrite(13, LOW);
 
   pixels.begin();
-  offline();
+  pixels.setOffline(true);
 
   comm.begin();
 }
@@ -35,21 +27,17 @@ void loop() {
     lastms = ms;
     return;
   }
-
   unsigned long dt = ms - lastms;
   lastms = ms;
   uint8_t dt8 = dt > 255 ? 255 : dt;
-
-  if(idlecycles > 200) {
-    offline();
-    idlecycles = 0;
-    return;
-  }
+  idleTime += dt8;
+  pixels.setOffline(idleTime > 500);
+  if(idleTime > 4000)
+    idleTime = 4000;
 
   switch(comm.receive(5)) {
     default:
     case NONE:
-      idlecycles++;
       pixels.step(dt8);
       return;
 
@@ -110,5 +98,5 @@ void loop() {
       pixels.showRGB();
       break;
   }
-  idlecycles = 0;
+  idleTime = 0;
 }

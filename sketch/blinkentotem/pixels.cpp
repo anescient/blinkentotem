@@ -79,6 +79,15 @@ void Pixels::setConfig(config_t & config) {
   maxPulse = ((uint16_t)config.maxPulse << 1);
 }
 
+void Pixels::setOffline(bool offline) {
+  bool changed = offline == !this->offline;
+  this->offline = offline;
+  if(changed) {
+    showRGB();
+    showRGBW();
+  }
+}
+
 void Pixels::updateRGB(rgb_t * rgbframe) {
   updateRGB(rgbframe, 0, RGB_COUNT);
 }
@@ -158,6 +167,14 @@ void Pixels::step(uint8_t dt) {
 
 void Pixels::showRGB() {
   waitForPixels();
+  if(offline) {
+    rgbpix.clear();
+    rgbpix.setPixelColor(0, 20, 0, 0);
+    rgbpix.setPixelColor(1, 20, 0, 0);
+    rgbpix.show();
+    return;
+  }
+
   for(int i = 0; i < RGB_COUNT; i++) {
     rgb_t & c = rgb[i];
     rgbpix.setPixelColor(i, c.r, c.g, c.b);
@@ -193,6 +210,12 @@ void Pixels::showRGB() {
 
 void Pixels::showRGBW() {
   waitForPixels();
+  if(offline) {
+    rgbwpix.clear();
+    rgbwpix.show();
+    return;
+  }
+
   for(int i = 0; i < RGBW_COUNT; i++) {
     rgbw_t c = rgbw[i];
     Spinner & spinner = spinners[i];

@@ -13,6 +13,8 @@
       Adafruit_NeoPixel rgbpix;
       Adafruit_NeoPixel rgbwpix;
 
+      bool offline = false;
+
       class Spinner {
         private:
           uint16_t phase = 0;
@@ -63,6 +65,8 @@
       void begin();
 
       void setConfig(config_t & config);
+
+      void setOffline(bool offline);
 
       void updateRGB(rgb_t * rgbframe);
 
