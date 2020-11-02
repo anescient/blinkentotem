@@ -19,6 +19,11 @@ datatype_t Comm::receive(int timeoutms) {
         datatype = PING;
         break;
 
+      case 'p':
+        datatype = CONFIG;
+        datasize = sizeof(config_t);
+        break;
+
       case '1':
         datatype = RGBFRAME;
         datasize = RGB_COUNT * sizeof(rgb_t);
@@ -51,23 +56,24 @@ datatype_t Comm::receive(int timeoutms) {
 
       case 'd':
         datatype = DRUM;
-        datasize = 2 * sizeof(rgb_t);
+        datasize = DRUM_COUNT * sizeof(rgb_t);
         break;
 
       case 'l':
         datatype = LAMPS;
-        datasize = 2 * sizeof(rgb_t);
+        datasize = LAMP_COUNT * sizeof(rgb_t);
         break;
 
       case 'f':
-        datatype = RAIDPULSE;
+        datatype = RAIDFLASH;
         datasize = RAID_COUNT * sizeof(iopulse_t);
         break;
 
-      case 'p':
-        datatype = CONFIG;
-        datasize = sizeof(config_t);
+      case 'm':
+        datatype = DRUMFLASH;
+        datasize = sizeof(iopulse_t);
         break;
+
     }
 
     if(datasize > 0 && Serial.readBytes(buffer.bytes, datasize) != datasize) {

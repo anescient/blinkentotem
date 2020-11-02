@@ -11,6 +11,7 @@
   enum datatype_t {
     NONE, // timeout or error or whatever
     PING, // watchdog reset
+    CONFIG,
     RGBFRAME, // data for entire rgb string
     RGBWFRAME, // data for entire rgbw string
     CPU_SPIN, // data for spins on rgbw blue
@@ -19,8 +20,8 @@
     LAMPS, // rgb[0] to rgb[1]
     DRUM, // rgb[2] to rgb[3]
     RAID, // rgb[4] to rgb[7]
-    RAIDPULSE, // iopulse_t[4]
-    CONFIG
+    RAIDFLASH, // iopulse_t[4]
+    DRUMFLASH // iopulse_t[2]
   };
 
   // also used for framebuffer
@@ -63,8 +64,8 @@
         config_t    config;
         rgb_t       rgb [RGB_COUNT];
         rgbw_t      rgbw [RGBW_COUNT];
-        spin_t      spins [RGBW_COUNT];
-        iopulse_t   raidpulse [RAID_COUNT];
+        spin_t      spins [8];
+        iopulse_t   pulses [4];
       } buffer;
 
       void begin();

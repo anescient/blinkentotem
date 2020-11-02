@@ -148,19 +148,20 @@ class CPUIndicator:
 
 def main():
     totem = Totem()
-
     totem.setParams(30, 100, 40)
-
     for led in totem.lamps:
         led.setrgb(30, 15, 25)
-    totem.pushPieces()
-
     for led in totem.raid:
         led.g = 2
+    totem.drum[0].setrgb(28, 33, 15)
+    totem.drum[1].setrgb(15, 17, 7)
+
+    totem.pushPieces()
 
     raiddevices = ['sdb', 'sdc', 'sdd', 'sde']
     rootdevice = 'sda'
-    raidDivisor = 120000
+    raidDivisor = 150000
+    rootDivisor = 800000
 
     cpuactivities = [CPUActivity(i) for i in range(8)]
     diskactivities = {device: DiskActivity() for device in [rootdevice] + raiddevices}
@@ -197,16 +198,11 @@ def main():
             pulse.read = max(pulse.read, pulse.write // 2)
 
         activity = diskactivities[rootdevice]
-        led1, led2 = totem.drum
-        led1.setrgb(28, 33, 15)
-        led2.setrgb(15, 17, 7)
-        a, b = (led1, led2) if frame % 2 else (led2, led1)
+        pulse = totem.drumpulse
         if activity.bytesread > 0:
-            a.setrgb(0, 255, 0)
-            b.g = 0
+            pulse.read = max(1, min(70, activity.bytesread // rootDivisor))
         if activity.byteswritten > 0:
-            b.setrgb(255, 0, 0)
-            a.r = 0
+            pulse.write = max(1, min(70, activity.byteswritten // rootDivisor))
 
         totem.pushPieces()
         time.sleep(0.05)

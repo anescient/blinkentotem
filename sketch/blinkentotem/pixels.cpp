@@ -26,7 +26,7 @@ void Pixels::Spinner::clear() {
   b_max = 0;
 }
 
-bool Pixels::RaidFlash::step(uint8_t dt) {
+bool Pixels::Flash::step(uint8_t dt) {
   if(dt == 0)
     return false;
   bool zeroed = false;
@@ -47,7 +47,7 @@ bool Pixels::RaidFlash::step(uint8_t dt) {
   return zeroed;
 }
 
-void Pixels::RaidFlash::clear() {
+void Pixels::Flash::clear() {
   red = 0;
   green = 0;
 }
@@ -55,6 +55,12 @@ void Pixels::RaidFlash::clear() {
 void Pixels::waitForPixels() {
   while(!rgbpix.canShow());
   while(!rgbwpix.canShow());
+}
+
+void Pixels::addPulse(uint16_t & target, uint8_t x) {
+  target += x;
+  if(target > maxPulse)
+    target = maxPulse;
 }
 
 void Pixels::begin() {
@@ -111,20 +117,25 @@ void Pixels::updateSpins(spin_t * spins) {
   }
 }
 
-void Pixels::updateRaid(iopulse_t * pulses) {
+void Pixels::flashRaid(iopulse_t * pulses) {
   for(int i = 0; i < RAID_COUNT; i++) {
     iopulse_t & pulse = pulses[i];
-    RaidFlash & flash = raidFlash[i];
-    flash.green += pulse.read;
-    if(flash.green > maxPulse)
-      flash.green = maxPulse;
-    flash.red += pulse.write;
-    if(flash.red > maxPulse)
-      flash.red = maxPulse;
+    Flash & flash = raidFlash[i];
+    addPulse(flash.green, pulse.read);
+    addPulse(flash.red, pulse.write);
   }
 }
 
+void Pixels::flashDrum(iopulse_t & pulse) {
+  addPulse(drumFlash[0].green, pulse.read);
+  addPulse(drumFlash[1].red, pulse.write);
+  drumFlip = !drumFlip;
+}
+
 void Pixels::step(uint8_t dt) {
+  if(dt == 0)
+    return;
+
   bool changed = false;
   for(int i = 0; i < RGBW_COUNT; i++) {
     Spinner & spinner = spinners[i];
@@ -135,11 +146,12 @@ void Pixels::step(uint8_t dt) {
   }
   if(changed)
     showRGBW();
+
   changed = false;
-  for(int i = 0; i < RAID_COUNT; i++) {
-    RaidFlash & flash = raidFlash[i];
-    changed |= flash.step(dt);
-  }
+  for(int i = 0; i < RAID_COUNT; i++)
+    changed |= raidFlash[i].step(dt);
+  for(int i = 0; i < DRUM_COUNT; i++)
+    changed |= drumFlash[i].step(dt);
   if(changed)
     showRGB();
 }
@@ -150,13 +162,32 @@ void Pixels::showRGB() {
     rgb_t & c = rgb[i];
     rgbpix.setPixelColor(i, c.r, c.g, c.b);
   }
+
   for(int i = 0; i < RAID_COUNT; i++) {
-    RaidFlash & flash = raidFlash[i];
+    Flash & flash = raidFlash[i];
     rgb_t & c = rgb[RAID_OFFSET + i];
     uint8_t r = flash.red ? raidRed : c.r;
     uint8_t g = flash.green ? raidGreen : c.g;
     rgbpix.setPixelColor(RAID_OFFSET + i, r, g, c.b);
   }
+
+  bool flashing = false;
+  for(int i = 0; i < DRUM_COUNT; i++) {
+    Flash & flash = drumFlash[i];
+    flashing |= flash.red || flash.green;
+  }
+  if(flashing) {
+    for(int i = 0; i < DRUM_COUNT; i++) {
+      uint8_t r = 0;
+      uint8_t g = 0;
+      uint8_t b = 0;
+      Flash & flash = drumFlash[drumFlip ? 1 - i : i];
+      r = flash.red ? drumRed : 0;
+      g = flash.green ? drumGreen : 0;
+      rgbpix.setPixelColor(DRUM_OFFSET + i, r, g, b);
+    }
+  }
+
   rgbpix.show();
 }
 
@@ -179,4 +210,6 @@ void Pixels::clear() {
     spinners[i].clear();
   for(int i = 0; i < RAID_COUNT; i++)
     raidFlash[i].clear();
+  for(int i = 0; i < DRUM_COUNT; i++)
+    drumFlash[i].clear();
 }

@@ -31,7 +31,7 @@
 
       Spinner spinners[RGBW_COUNT];
 
-      class RaidFlash {
+      class Flash {
         public:
           uint16_t red = 0;
           uint16_t green = 0;
@@ -41,13 +41,20 @@
           void clear();
       };
 
-      RaidFlash raidFlash[RAID_COUNT];
+      Flash raidFlash[RAID_COUNT];
       uint8_t raidRed = 30;
       uint8_t raidGreen = 70;
+
+      Flash drumFlash[DRUM_COUNT];
+      uint8_t drumRed = 150;
+      uint8_t drumGreen = 200;
+      bool drumFlip = false;
 
       uint16_t maxPulse = 1000;
 
       void waitForPixels();
+
+      void addPulse(uint16_t & target, uint8_t x);
 
     public:
       rgb_t rgb[RGB_COUNT];
@@ -69,7 +76,9 @@
 
       void updateSpins(spin_t * spins);
 
-      void updateRaid(iopulse_t * pulses);
+      void flashRaid(iopulse_t * pulses);
+
+      void flashDrum(iopulse_t & pulse);
 
       void step(uint8_t dt);
 

@@ -91,17 +91,22 @@ void loop() {
       break;
 
     case DRUM:
-      pixels.updateRGB(comm.buffer.rgb, 2, 2);
+      pixels.updateRGB(comm.buffer.rgb, DRUM_OFFSET, DRUM_COUNT);
       pixels.showRGB();
       break;
 
     case LAMPS:
-      pixels.updateRGB(comm.buffer.rgb, 0, 2);
+      pixels.updateRGB(comm.buffer.rgb, LAMP_OFFSET, LAMP_COUNT);
       pixels.showRGB();
       break;
 
-    case RAIDPULSE:
-      pixels.updateRaid(comm.buffer.raidpulse);
+    case RAIDFLASH:
+      pixels.flashRaid(comm.buffer.pulses);
+      pixels.showRGB();
+      break;
+
+    case DRUMFLASH:
+      pixels.flashDrum(comm.buffer.pulses[0]);
       pixels.showRGB();
       break;
   }

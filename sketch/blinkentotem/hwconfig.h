@@ -10,4 +10,10 @@
 
   #define RAID_COUNT  4
   #define RAID_OFFSET 4 // index into led string
+
+  #define DRUM_COUNT  2
+  #define DRUM_OFFSET 2
+
+  #define LAMP_COUNT  2
+  #define LAMP_OFFSET 0
 #endif

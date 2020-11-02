@@ -97,10 +97,11 @@ class Totem:
         self.drum = self.rgb[2:4]
         self.lamps = self.rgb[0:2]
         self.raidpulse = [self.IOPulse() for _ in self.raid]
+        self.drumpulse = self.IOPulse()
 
         self._ep = namedtuple(
             'Endpoints',
-            'rgb rgbw spins red green raid drum lamps raidpulse')
+            'rgb rgbw spins red green raid drum lamps raidpulse drumpulse')
         self._ep.rgb = self._Endpoint('1')
         self._ep.rgbw = self._Endpoint('2')
         self._ep.spins = self._Endpoint('s')
@@ -110,6 +111,7 @@ class Totem:
         self._ep.drum = self._Endpoint('d')
         self._ep.lamps = self._Endpoint('l')
         self._ep.raidpulse = self._PulseEndpoint('f')
+        self._ep.drumpulse = self._PulseEndpoint('m')
 
         # arduino resets when comms begin
         # gotta wait for the bootloader to timeout and run the rom
@@ -149,10 +151,11 @@ class Totem:
         self._ep.drum.update(self.drum)
         self._ep.lamps.update(self.lamps)
         self._ep.raidpulse.update(self.raidpulse)
+        self._ep.drumpulse.update([self.drumpulse])
         updated = False
         for ep in [self._ep.spins, self._ep.red, self._ep.green,
                    self._ep.raid, self._ep.drum, self._ep.lamps,
-                   self._ep.raidpulse]:
+                   self._ep.raidpulse, self._ep.drumpulse]:
             if ep.dirty or force:
                 ep.write(self._serial)
                 self._serial.flush()
