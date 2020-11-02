@@ -88,8 +88,24 @@ class Totem:
             return [min(255, self.read),
                     min(255, self.write)]
 
+    class Configuration:
+        def __init__(self):
+            self.maxPulse = 40
+            self.raidRed = 30
+            self.raidGreen = 100
+            self.drumRed = 150
+            self.drumGreen = 200
+
+        def getPayload(self):
+            return [self.maxPulse,
+                    self.raidRed,
+                    self.raidGreen,
+                    self.drumRed,
+                    self.drumGreen]
+
     def __init__(self, serialport='/dev/ttyUSB0'):
         self._serial = serial.Serial(serialport, 56000)
+        self.config = self.Configuration()
         self.rgbw = [self.RGBWled() for _ in range(8)]
         self.spinners = [self.Spinner() for _ in self.rgbw]
         self.rgb = [self.RGBled() for _ in range(8)]
@@ -127,9 +143,8 @@ class Totem:
         self._serial.write([self._leadin, ord(' '), 0])
         self._serial.flush()
 
-    def setParams(self, raidred, raidgreen, maxpulse):
-        self._serial.write([self._leadin, ord('p'), 0,
-                            raidred, raidgreen, maxpulse])
+    def pushConfig(self):
+        self._serial.write([self._leadin, ord('p'), 0] + self.config.getPayload())
         self._serial.flush()
 
     def pushFrames(self, force=False):

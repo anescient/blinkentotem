@@ -40,9 +40,11 @@
   };
 
   struct config_t {
+    uint8_t maxPulse;
     uint8_t raidRed;
     uint8_t raidGreen;
-    uint8_t maxPulse;
+    uint8_t drumRed;
+    uint8_t drumGreen;
   };
 
   struct spin_t {

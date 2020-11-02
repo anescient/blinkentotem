@@ -31,7 +31,7 @@ void loop() {
   lastms = ms;
   uint8_t dt8 = dt > 255 ? 255 : dt;
   idleTime += dt8;
-  pixels.setOffline(idleTime > 500);
+  pixels.setOffline(idleTime > 1000);
   if(idleTime > 4000)
     idleTime = 4000;
 

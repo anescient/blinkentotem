@@ -142,13 +142,19 @@ class CPUIndicator:
         led.g = unitToByte(0.5 * self.io ** 2)
 
     def set_spinner(self, spin):
-        spin.frequency = max(20, unitToByte(0.2 + 0.6 * self.busyLagA))
-        spin.brightness = max(8, unitToByte(0.1 + 0.9 * self.busyLagB))
+        spin.frequency = max(3, unitToByte(0.9 * self.busyLagA - 0.2))
+        spin.brightness = max(30, unitToByte(0.2 + 0.7 * self.busyLagB))
 
 
 def main():
     totem = Totem()
-    totem.setParams(30, 100, 40)
+    totem.config.maxPulse = 40
+    totem.config.raidRed = 30
+    totem.config.raidGreen = 100
+    totem.config.drumRed = 150
+    totem.config.drumGreen = 200
+    totem.pushConfig()
+
     for led in totem.lamps:
         led.setrgb(30, 15, 25)
     for led in totem.raid:
@@ -200,9 +206,9 @@ def main():
         activity = diskactivities[rootdevice]
         pulse = totem.drumpulse
         if activity.bytesread > 0:
-            pulse.read = max(1, min(70, activity.bytesread // rootDivisor))
+            pulse.read = max(4, min(70, activity.bytesread // rootDivisor))
         if activity.byteswritten > 0:
-            pulse.write = max(1, min(70, activity.byteswritten // rootDivisor))
+            pulse.write = max(4, min(70, activity.byteswritten // rootDivisor))
 
         totem.pushPieces()
         time.sleep(0.05)

@@ -4,7 +4,7 @@
 void Pixels::Spinner::step(uint8_t dt) {
   if(dt > 40)
     dt = 40;
-  phase += ((uint16_t)frequency) * 6 * dt;
+  phase += ((uint16_t)frequency) * 5 * dt;
 }
 
 bool Pixels::Spinner::exportBlue(rgbw_t & rgbw) {
@@ -74,9 +74,11 @@ void Pixels::begin() {
 }
 
 void Pixels::setConfig(config_t & config) {
+  maxPulse = ((uint16_t)config.maxPulse << 1);
   raidRed = config.raidRed;
   raidGreen = config.raidGreen;
-  maxPulse = ((uint16_t)config.maxPulse << 1);
+  drumRed = config.drumRed;
+  drumGreen = config.drumGreen;
 }
 
 void Pixels::setOffline(bool offline) {
@@ -118,7 +120,7 @@ void Pixels::updateSpins(spin_t * spins) {
     Spinner & spnr = spinners[i];
     spnr.frequency = s.frequency;
     spnr.b_max = s.brightness;
-    spnr.b_min = s.brightness / 4;
+    spnr.b_min = s.brightness / 8;
     if(spnr.b_min < 1)
       spnr.b_min = 1;
     if(spnr.b_max < spnr.b_min)
