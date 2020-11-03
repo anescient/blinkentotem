@@ -91,5 +91,7 @@
       void showRGBW();
 
       void clear();
+
+      void clearEffects();
   };
 #endif

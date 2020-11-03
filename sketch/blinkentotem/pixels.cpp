@@ -85,6 +85,9 @@ void Pixels::setOffline(bool offline) {
   bool changed = offline == !this->offline;
   this->offline = offline;
   if(changed) {
+    if(offline) {
+      clearEffects();
+    }
     showRGB();
     showRGBW();
   }
@@ -231,6 +234,10 @@ void Pixels::showRGBW() {
 void Pixels::clear() {
   memset(rgb, 0, RGB_COUNT * sizeof(rgb_t));
   memset(rgbw, 0, RGBW_COUNT * sizeof(rgbw_t));
+  clearEffects();
+}
+
+void Pixels::clearEffects() {
   for(int i = 0; i < RGBW_COUNT; i++)
     spinners[i].clear();
   for(int i = 0; i < RAID_COUNT; i++)
