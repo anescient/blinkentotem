@@ -52,54 +52,40 @@ def unitToByte(x):
 class CPUIndicator:
 
     _heatcurve = UnitCurve()
-    _heatcurve.addPoint(0.0, 0.004)
-    _heatcurve.addPoint(0.1, 0.02)
-    _heatcurve.addPoint(0.2, 0.04)
-    _heatcurve.addPoint(0.3, 0.08)
-    _heatcurve.addPoint(0.4, 0.16)
-    _heatcurve.addPoint(0.5, 0.25)
-    _heatcurve.addPoint(0.9, 0.5)
+    _heatcurve.addPoint(0.0, 0.01)
+    _heatcurve.addPoint(0.2, 0.05)
+    _heatcurve.addPoint(0.8, 0.25)
     _heatcurve.addPoint(1.0, 1.0)
 
     def __init__(self, cpuindex, totem):
         self._cpuindex = cpuindex
         self._led = totem.rgbw[cpuindex]
         self._spinner = totem.spinners[cpuindex]
-        self._busy = 0
-        self._io = 0
         self._heat = 0
         self._frequency = 0
         self._brightness = 0
 
     def update(self, cpuactivity):
-        self._busy = cpuactivity.busy
-        self._io = cpuactivity.io
+        busy = cpuactivity.busy
+        if busy > self._heat:
+            self._heat += 0.02 * (busy - self._heat)
+        if busy < 0.2:
+            self._heat *= 0.97 + 0.03 * (busy / 0.2)
+        self._led.r = unitToByte(self._heatcurve.sample(self._heat))
 
-        if self._busy > 0.2:
-            t = (self._busy - 0.3) / 0.7
-            if t >= self._heat:
-                self._heat += 0.001 * (t - self._heat)
-        if self._heat < 0:
-            self._heat = 0
-        if self._heat > 1:
-            self._heat = 1
-        self._heat *= 0.99
+        self._led.g = unitToByte(0.5 * cpuactivity.io ** 2)
 
-        self._led.r = unitToByte(self._heatcurve.sample(self._heat * 8))
-
-        self._led.g = unitToByte(0.5 * self._io ** 2)
-
-        if self._busy > self._frequency:
-            self._frequency = 0.6 * self._frequency + 0.4 * self._busy
+        if busy > self._frequency:
+            self._frequency = 0.8 * self._frequency + 0.2 * busy
         else:
-            self._frequency = 0.3 * self._frequency + 0.7 * self._busy
+            self._frequency = 0.6 * self._frequency + 0.4 * busy
 
-        if self._busy > self._brightness:
-            self._brightness = 0.8 * self._brightness + 0.2 * self._busy
+        if busy > self._brightness:
+            self._brightness = 0.8 * self._brightness + 0.2 * busy
         else:
-            self._brightness = 0.2 * self._brightness + 0.8 * self._busy
-        self._spinner.frequency = max(1, unitToByte(0.9 * self._frequency - 0.2))
-        self._spinner.brightness = max(20, unitToByte(0.2 + 0.7 * self._brightness))
+            self._brightness = 0.2 * self._brightness + 0.8 * busy
+        self._spinner.frequency = max(1, unitToByte(0.8 * self._frequency - 0.2))
+        self._spinner.brightness = max(20, unitToByte(0.2 + 0.6 * self._brightness))
 
 
 class RaidDiskIndicator:
