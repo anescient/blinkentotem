@@ -1,29 +1,27 @@
 
 #include "pixels.h"
 
-void Pixels::Spinner::step(uint8_t dt) {
+bool Pixels::Spinner::step(uint8_t dt) {
   if(dt > 40)
     dt = 40;
   phase += ((uint16_t)frequency) * 5 * dt;
-}
-
-bool Pixels::Spinner::exportBlue(rgbw_t & rgbw) {
   uint16_t x = phase >> 7;
   x = x < 256 ? x : 511 - x; // sawtooth
-  x = b_min + ((x * (b_max - b_min)) >> 8);
-  uint8_t b = Adafruit_NeoPixel::gamma8(x);
-  if(x > 0 && b == 0)
-    b = 1;
-  if(b == rgbw.b)
+  x = v_min + ((x * (v_max - v_min)) >> 8);
+  uint8_t v = Adafruit_NeoPixel::gamma8(x);
+  if(x > 0 && v == 0)
+    v = 1;
+  if(v == outvalue)
     return false;
-  rgbw.b = b;
+  outvalue = v;
   return true;
 }
 
 void Pixels::Spinner::clear() {
   frequency = 0;
-  b_min = 0;
-  b_max = 0;
+  v_min = 0;
+  v_max = 0;
+  outvalue = 0;
 }
 
 bool Pixels::Flash::step(uint8_t dt) {
@@ -45,6 +43,10 @@ bool Pixels::Flash::step(uint8_t dt) {
     zeroed |= green == 0;
   }
   return zeroed;
+}
+
+bool Pixels::Flash::active() {
+  return red || green;
 }
 
 void Pixels::Flash::clear() {
@@ -122,12 +124,12 @@ void Pixels::updateSpins(spin_t * spins) {
     spin_t & s = spins[i];
     Spinner & spnr = spinners[i];
     spnr.frequency = s.frequency;
-    spnr.b_max = s.brightness;
-    spnr.b_min = s.brightness / 8;
-    if(spnr.b_min < 1)
-      spnr.b_min = 1;
-    if(spnr.b_max < spnr.b_min)
-      spnr.b_max = spnr.b_min;
+    spnr.v_max = s.brightness;
+    spnr.v_min = s.brightness / 8;
+    if(spnr.v_min < 1)
+      spnr.v_min = 1;
+    if(spnr.v_max < spnr.v_min)
+      spnr.v_max = spnr.v_min;
   }
 }
 
@@ -153,10 +155,8 @@ void Pixels::step(uint8_t dt) {
   bool changed = false;
   for(int i = 0; i < RGBW_COUNT; i++) {
     Spinner & spinner = spinners[i];
-    if(spinner.frequency != 0) {
-      spinner.step(dt);
-      changed |= spinner.exportBlue(rgbw[i]);
-    }
+    if(spinner.frequency != 0)
+      changed |= spinner.step(dt);
   }
   if(changed)
     showRGBW();
@@ -194,10 +194,8 @@ void Pixels::showRGB() {
   }
 
   bool flashing = false;
-  for(int i = 0; i < DRUM_COUNT; i++) {
-    Flash & flash = drumFlash[i];
-    flashing |= flash.red || flash.green;
-  }
+  for(int i = 0; i < DRUM_COUNT; i++)
+    flashing |= drumFlash[i].active();
   if(flashing) {
     for(int i = 0; i < DRUM_COUNT; i++) {
       uint8_t r = 0;
@@ -225,7 +223,7 @@ void Pixels::showRGBW() {
     rgbw_t c = rgbw[i];
     Spinner & spinner = spinners[i];
     if(spinner.frequency != 0)
-      spinners[i].exportBlue(c);
+      c.b = spinners[i].outvalue;
     rgbwpix.setPixelColor(i, c.g, c.r, c.b, c.w);
   }
   rgbwpix.show();

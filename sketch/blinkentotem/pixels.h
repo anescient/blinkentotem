@@ -21,12 +21,11 @@
 
         public:
           uint8_t frequency = 0;
-          uint8_t b_min = 0;
-          uint8_t b_max = 0;
+          uint8_t v_min = 0;
+          uint8_t v_max = 0;
+          uint8_t outvalue = 0;
 
-          void step(uint8_t dt);
-
-          bool exportBlue(rgbw_t & rgbw);
+          bool step(uint8_t dt);
 
           void clear();
       };
@@ -39,6 +38,8 @@
           uint16_t green = 0;
 
           bool step(uint8_t dt);
+
+          bool active();
 
           void clear();
       };
