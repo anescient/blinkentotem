@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
 import time
-import psutil
 
 from blinkentotem import Totem
+from superps import SystemActivity
 
 
 # mapping [0.0, 1.0] to [0.0, 1.0]
@@ -47,50 +47,6 @@ def unitToByte(x):
     if x <= 0:
         return 0
     return max(1, min(255, int(256.0 * x)))
-
-
-class DiskActivity:
-
-    def __init__(self):
-        self._sdiskio = None
-        self.bytesread = 0
-        self.byteswritten = 0
-
-    def update(self, sdiskio):
-        if self._sdiskio is None:
-            self._sdiskio = sdiskio
-        self.bytesread = sdiskio.read_bytes - self._sdiskio.read_bytes
-        self.byteswritten = sdiskio.write_bytes - self._sdiskio.write_bytes
-        self._sdiskio = sdiskio
-
-
-# psutil's "cpu_percent" methods changed or broke or something
-# they sucked anyway
-class CPUActivity:
-
-    def __init__(self, scpuindex):
-        self._prevtimes = None
-        self._scpuindex = scpuindex
-        self.busy = 0
-        self.io = 0
-
-    def update(self, scputimes):
-        nexttimes = scputimes[self._scpuindex]
-        if self._prevtimes is None:
-            self._prevtimes = nexttimes
-        prevsum = sum(self._prevtimes)
-        nextsum = sum(nexttimes)
-        dt = nextsum - prevsum
-        if dt < 0.02:
-            return
-
-        idletime = nexttimes.idle - self._prevtimes.idle
-        iotime = nexttimes.iowait - self._prevtimes.iowait
-        busytime = dt - idletime - iotime
-        self._prevtimes = nexttimes
-
-        self.busy = busytime / dt
-        self.io = iotime / dt
 
 
 class CPUIndicator:
@@ -181,41 +137,33 @@ def main():
     raidDivisor = 150000
     rootDivisor = 800000
 
-    cpuactivities = [CPUActivity(i) for i in range(8)]
-    diskactivities = {device: DiskActivity() for device in [rootdevice] + raiddevices}
-
-    cpuindicators = [CPUIndicator() for _ in cpuactivities]
+    systemActivity = SystemActivity([rootdevice] + raiddevices)
+    cpuindicators = [CPUIndicator() for _ in range(8)]
 
     frame = 0
     while True:
         frame += 1
 
         if frame % 3 == 0:
-            cputimes = psutil.cpu_times(percpu=True)
-            for activity in cpuactivities:
-                activity.update(cputimes)
-
-            for activity, indicator in zip(cpuactivities, cpuindicators):
+            cpus = systemActivity.updateCPUs()
+            for activity, indicator, led, spin in zip(
+                    cpus, cpuindicators, totem.rgbw, totem.spinners):
                 indicator.update(activity)
                 indicator.step()
-
-            for indicator, led, spin in zip(cpuindicators, totem.rgbw, totem.spinners):
                 indicator.set_led(led)
                 indicator.set_spinner(spin)
 
-        diskcounters = psutil.disk_io_counters(perdisk=True, nowrap=True)
-        for device, activity in diskactivities.items():
-            activity.update(diskcounters[device])
+        disks = systemActivity.updateDisks()
 
         for device, pulse in zip(raiddevices, totem.raidpulse):
-            activity = diskactivities[device]
+            activity = disks[device]
             if activity.bytesread > 0:
                 pulse.read = max(1, min(70, activity.bytesread // raidDivisor))
             if activity.byteswritten > 0:
                 pulse.write = max(1, min(70, activity.byteswritten // raidDivisor))
             pulse.read = max(pulse.read, pulse.write // 2)
 
-        activity = diskactivities[rootdevice]
+        activity = disks[rootdevice]
         pulse = totem.drumpulse
         if activity.bytesread > 0:
             pulse.read = max(4, min(70, activity.bytesread // rootDivisor))
@@ -233,6 +181,7 @@ def main():
         if frame % 10 == 0:
             totem.ping()
 
+    # noinspection PyUnreachableCode
     return 0
 
 
