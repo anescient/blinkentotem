@@ -120,12 +120,12 @@ class CPUIndicator:
         if self.busy > 0.2:
             t = (self.busy - 0.3) / 0.7
             if t >= self.heat:
-                self.heat += (0.05 * (t - self.heat)) ** 2
+                self.heat += 0.001 * (t - self.heat)
         if self.heat < 0:
             self.heat = 0
         if self.heat > 1:
             self.heat = 1
-        self.heat *= 0.999 - 0.04 * self.heat
+        self.heat *= 0.99
 
         if self.busy > self.busyLagA:
             self.busyLagA = 0.6 * self.busyLagA + 0.4 * self.busy
@@ -146,6 +146,17 @@ class CPUIndicator:
         spin.brightness = max(30, unitToByte(0.2 + 0.7 * self.busyLagB))
 
 
+def setDrumWhite(totem, x):
+    totem.drum[0].setrgb(
+        unitToByte(x * 0.28),
+        unitToByte(x * 0.33),
+        unitToByte(x * 0.15))
+    totem.drum[1].setrgb(
+        unitToByte(x * 0.15),
+        unitToByte(x * 0.15),
+        unitToByte(x * 0.06))
+
+
 def main():
     totem = Totem()
     totem.config.maxPulse = 40
@@ -156,11 +167,12 @@ def main():
     totem.pushConfig()
 
     for led in totem.lamps:
-        led.setrgb(30, 15, 25)
+        led.setrgb(20, 8, 14)
     for led in totem.raid:
         led.g = 2
-    totem.drum[0].setrgb(28, 33, 15)
-    totem.drum[1].setrgb(15, 17, 7)
+
+    drumBrightness = 0.5
+    setDrumWhite(totem, drumBrightness)
 
     totem.pushPieces()
 
@@ -209,6 +221,11 @@ def main():
             pulse.read = max(4, min(70, activity.bytesread // rootDivisor))
         if activity.byteswritten > 0:
             pulse.write = max(4, min(70, activity.byteswritten // rootDivisor))
+        if activity.bytesread or activity.byteswritten:
+            drumBrightness = max(0.3, drumBrightness - 0.06)
+        else:
+            drumBrightness = min(1.0, drumBrightness + 0.02)
+        setDrumWhite(totem, min(0.5, drumBrightness))
 
         totem.pushPieces()
         time.sleep(0.05)
