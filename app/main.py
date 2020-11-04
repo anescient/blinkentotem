@@ -51,78 +51,80 @@ def unitToByte(x):
 
 class CPUIndicator:
 
-    heatcurve = UnitCurve()
-    heatcurve.addPoint(0.0, 0.004)
-    heatcurve.addPoint(0.1, 0.02)
-    heatcurve.addPoint(0.2, 0.04)
-    heatcurve.addPoint(0.3, 0.08)
-    heatcurve.addPoint(0.4, 0.16)
-    heatcurve.addPoint(0.5, 0.25)
-    heatcurve.addPoint(0.9, 0.5)
-    heatcurve.addPoint(1.0, 1.0)
+    _heatcurve = UnitCurve()
+    _heatcurve.addPoint(0.0, 0.004)
+    _heatcurve.addPoint(0.1, 0.02)
+    _heatcurve.addPoint(0.2, 0.04)
+    _heatcurve.addPoint(0.3, 0.08)
+    _heatcurve.addPoint(0.4, 0.16)
+    _heatcurve.addPoint(0.5, 0.25)
+    _heatcurve.addPoint(0.9, 0.5)
+    _heatcurve.addPoint(1.0, 1.0)
 
-    def __init__(self):
-        self.busy = 0
-        self.io = 0
-        self.heat = 0
-        self.busyLagA = 0
-        self.busyLagB = 0
+    def __init__(self, cpuindex, totem):
+        self._cpuindex = cpuindex
+        self._led = totem.rgbw[cpuindex]
+        self._spinner = totem.spinners[cpuindex]
+        self._busy = 0
+        self._io = 0
+        self._heat = 0
+        self._frequency = 0
+        self._brightness = 0
 
     def update(self, cpuactivity):
-        self.busy = cpuactivity.busy
-        self.io = cpuactivity.io
+        self._busy = cpuactivity.busy
+        self._io = cpuactivity.io
 
-    def step(self):
-        if self.busy > 0.2:
-            t = (self.busy - 0.3) / 0.7
-            if t >= self.heat:
-                self.heat += 0.001 * (t - self.heat)
-        if self.heat < 0:
-            self.heat = 0
-        if self.heat > 1:
-            self.heat = 1
-        self.heat *= 0.99
+        if self._busy > 0.2:
+            t = (self._busy - 0.3) / 0.7
+            if t >= self._heat:
+                self._heat += 0.001 * (t - self._heat)
+        if self._heat < 0:
+            self._heat = 0
+        if self._heat > 1:
+            self._heat = 1
+        self._heat *= 0.99
 
-        if self.busy > self.busyLagA:
-            self.busyLagA = 0.6 * self.busyLagA + 0.4 * self.busy
+        self._led.r = unitToByte(self._heatcurve.sample(self._heat * 8))
+
+        self._led.g = unitToByte(0.5 * self._io ** 2)
+
+        if self._busy > self._frequency:
+            self._frequency = 0.6 * self._frequency + 0.4 * self._busy
         else:
-            self.busyLagA = 0.2 * self.busyLagA + 0.8 * self.busy
+            self._frequency = 0.3 * self._frequency + 0.7 * self._busy
 
-        if self.busy > self.busyLagB:
-            self.busyLagB = 0.8 * self.busyLagB + 0.2 * self.busy
+        if self._busy > self._brightness:
+            self._brightness = 0.8 * self._brightness + 0.2 * self._busy
         else:
-            self.busyLagB = 0.2 * self.busyLagB + 0.8 * self.busy
-
-    def set_led(self, led):
-        led.r = unitToByte(self.heatcurve.sample(self.heat * 8))
-        led.g = unitToByte(0.5 * self.io ** 2)
-
-    def set_spinner(self, spin):
-        spin.frequency = max(3, unitToByte(0.9 * self.busyLagA - 0.2))
-        spin.brightness = max(30, unitToByte(0.2 + 0.7 * self.busyLagB))
+            self._brightness = 0.2 * self._brightness + 0.8 * self._busy
+        self._spinner.frequency = max(1, unitToByte(0.9 * self._frequency - 0.2))
+        self._spinner.brightness = max(20, unitToByte(0.2 + 0.7 * self._brightness))
 
 
 class RaidDiskIndicator:
-    def __init__(self):
+    def __init__(self, pulse):
         self._divisor = 150000
+        self._pulse = pulse
 
-    def update(self, diskActivity, outPulse):
-        read, written = diskActivity.bytesread, diskActivity.byteswritten
+    def update(self, diskactivity):
+        read, written = diskactivity.bytesread, diskactivity.byteswritten
         if read > 0:
-            outPulse.read = max(1, min(70, read // self._divisor))
+            self._pulse.read = max(1, min(70, read // self._divisor))
         if written > 0:
-            outPulse.write = max(1, min(70, written // self._divisor))
-        outPulse.read = max(outPulse.read, outPulse.write // 2)
+            self._pulse.write = max(1, min(70, written // self._divisor))
+        self._pulse.read = max(self._pulse.read, self._pulse.write // 2)
 
 
 class DrumIndicator:
-    def __init__(self):
+    def __init__(self, totem):
         self._ssdDivisor = 800000
         self._white = 0.5
+        self._totem = totem
 
-    def update(self, diskActivity, outTotem):
-        read, written = diskActivity.bytesread, diskActivity.byteswritten
-        pulse = outTotem.drumpulse
+    def update(self, diskactivity):
+        read, written = diskactivity.bytesread, diskactivity.byteswritten
+        pulse = self._totem.drumpulse
         if read > 0:
             pulse.read = max(4, min(70, read // self._ssdDivisor))
         if written > 0:
@@ -134,11 +136,11 @@ class DrumIndicator:
             self._white = min(1.0, self._white + 0.02)
 
         x = min(0.5, self._white)
-        outTotem.drum[0].setrgb(
+        self._totem.drum[0].setrgb(
             unitToByte(x * 0.28),
             unitToByte(x * 0.33),
             unitToByte(x * 0.15))
-        outTotem.drum[1].setrgb(
+        self._totem.drum[1].setrgb(
             unitToByte(x * 0.15),
             unitToByte(x * 0.15),
             unitToByte(x * 0.06))
@@ -156,7 +158,7 @@ def main():
     for led in totem.lamps:
         led.setrgb(20, 8, 14)
     for led in totem.raid:
-        led.g = 2
+        led.g = 4
 
     totem.pushPieces()
 
@@ -164,9 +166,9 @@ def main():
     rootDevice = 'sda'
 
     systemActivity = SystemActivity([rootDevice] + raidDevices)
-    cpuIndicators = [CPUIndicator() for _ in range(8)]
-    raidIndicators = [RaidDiskIndicator() for _ in raidDevices]
-    rootIndicator = DrumIndicator()
+    cpuIndicators = [CPUIndicator(i, totem) for i in range(8)]
+    raidIndicators = [RaidDiskIndicator(pulse) for pulse in totem.raidpulse]
+    rootIndicator = DrumIndicator(totem)
 
     frame = 0
     while True:
@@ -174,21 +176,13 @@ def main():
 
         if frame % 3 == 0:
             cpus = systemActivity.updateCPUs()
-            for activity, indicator, led, spin in zip(
-                    cpus, cpuIndicators, totem.rgbw, totem.spinners):
+            for activity, indicator in zip(cpus, cpuIndicators):
                 indicator.update(activity)
-                indicator.step()
-                indicator.set_led(led)
-                indicator.set_spinner(spin)
 
         disks = systemActivity.updateDisks()
-
-        for device, indicator, pulse in zip(
-                raidDevices, raidIndicators, totem.raidpulse):
-            activity = disks[device]
-            indicator.update(activity, pulse)
-
-        rootIndicator.update(disks[rootDevice], totem)
+        for device, indicator in zip(raidDevices, raidIndicators):
+            indicator.update(disks[device])
+        rootIndicator.update(disks[rootDevice])
 
         totem.pushPieces()
         time.sleep(0.05)

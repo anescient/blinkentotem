@@ -6,10 +6,10 @@ bool Pixels::Spinner::step(uint8_t dt) {
     dt = 40;
   phase += ((uint16_t)frequency) * 5 * dt;
   uint16_t x = phase >> 7;
-  x = x < 256 ? x : 511 - x; // sawtooth
+  x = Adafruit_NeoPixel::sine8(x);
   x = v_min + ((x * (v_max - v_min)) >> 8);
   uint8_t v = Adafruit_NeoPixel::gamma8(x);
-  if(x > 0 && v == 0)
+  if(v == 0)
     v = 1;
   if(v == outvalue)
     return false;
