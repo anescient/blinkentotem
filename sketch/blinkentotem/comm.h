@@ -14,9 +14,11 @@
     CONFIG,
     RGBFRAME, // data for entire rgb string
     RGBWFRAME, // data for entire rgbw string
-    CPU_SPIN, // data for spins on rgbw blue
+    CPU_SPIN_B, // data for spins on rgbw blue
+    CPU_SPIN_W, // data for spins on rgbw white
     CPU_RED, // 8 bytes, rgbw string red
     CPU_GREEN, // 8 bytes, rgbw string green
+    CPU_WHITE, // 8 bytes, rgbw string white
     LAMPS, // rgb[0] to rgb[1]
     DRUM, // rgb[2] to rgb[3]
     RAID, // rgb[4] to rgb[7]

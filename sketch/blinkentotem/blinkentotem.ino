@@ -58,8 +58,13 @@ void loop() {
       pixels.showRGBW();
       break;
 
-    case CPU_SPIN:
-      pixels.updateSpins(comm.buffer.spins);
+    case CPU_SPIN_B:
+      pixels.updateSpins_B(comm.buffer.spins);
+      pixels.showRGBW();
+      break;
+
+    case CPU_SPIN_W:
+      pixels.updateSpins_W(comm.buffer.spins);
       pixels.showRGBW();
       break;
 
@@ -70,6 +75,11 @@ void loop() {
 
     case CPU_GREEN:
       pixels.updateRGBW_G(comm.buffer.bytes);
+      pixels.showRGBW();
+      break;
+
+    case CPU_WHITE:
+      pixels.updateRGBW_W(comm.buffer.bytes);
       pixels.showRGBW();
       break;
 

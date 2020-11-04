@@ -1,6 +1,16 @@
 
 #include "pixels.h"
 
+void Pixels::Spinner::update(spin_t & spin) {
+    frequency = spin.frequency;
+    v_max = spin.brightness;
+    v_min = spin.brightness / 8;
+    if(v_min < 1)
+      v_min = 1;
+    if(v_max < v_min)
+      v_max = v_min;
+}
+
 bool Pixels::Spinner::step(uint8_t dt) {
   if(dt > 40)
     dt = 40;
@@ -15,6 +25,10 @@ bool Pixels::Spinner::step(uint8_t dt) {
     return false;
   outvalue = v;
   return true;
+}
+
+bool Pixels::Spinner::active() {
+  return frequency != 0;
 }
 
 void Pixels::Spinner::clear() {
@@ -123,18 +137,19 @@ void Pixels::updateRGBW_G(uint8_t * green) {
     rgbw[i].g = green[i];
 }
 
-void Pixels::updateSpins(spin_t * spins) {
-  for(int i = 0; i < RGBW_COUNT; i++) {
-    spin_t & s = spins[i];
-    Spinner & spnr = spinners[i];
-    spnr.frequency = s.frequency;
-    spnr.v_max = s.brightness;
-    spnr.v_min = s.brightness / 8;
-    if(spnr.v_min < 1)
-      spnr.v_min = 1;
-    if(spnr.v_max < spnr.v_min)
-      spnr.v_max = spnr.v_min;
-  }
+void Pixels::updateRGBW_W(uint8_t * white) {
+  for(int i = 0; i < RGBW_COUNT; i++)
+    rgbw[i].w = white[i];
+}
+
+void Pixels::updateSpins_B(spin_t * spins) {
+  for(int i = 0; i < RGBW_COUNT; i++)
+    spins_blue[i].update(spins[i]);
+}
+
+void Pixels::updateSpins_W(spin_t * spins) {
+  for(int i = 0; i < RGBW_COUNT; i++)
+    spins_white[i].update(spins[i]);
 }
 
 void Pixels::flashRaid(iopulse_t * pulses) {
@@ -158,9 +173,12 @@ void Pixels::step(uint8_t dt) {
 
   bool changed = false;
   for(int i = 0; i < RGBW_COUNT; i++) {
-    Spinner & spinner = spinners[i];
-    if(spinner.frequency != 0)
-      changed |= spinner.step(dt);
+    Spinner & spin_b = spins_blue[i];
+    if(spin_b.active())
+      changed |= spin_b.step(dt);
+    Spinner & spin_w = spins_white[i];
+    if(spin_w.active())
+      changed |= spin_w.step(dt);
   }
   if(changed)
     showRGBW();
@@ -225,9 +243,12 @@ void Pixels::showRGBW() {
 
   for(int i = 0; i < RGBW_COUNT; i++) {
     rgbw_t c = rgbw[i];
-    Spinner & spinner = spinners[i];
-    if(spinner.frequency != 0)
-      c.b = spinners[i].outvalue;
+    Spinner & spin_b = spins_blue[i];
+    if(spin_b.active())
+      c.b = spin_b.outvalue;
+    Spinner & spin_w = spins_white[i];
+    if(spin_w.active())
+      c.w = spin_w.outvalue;
     rgbwpix.setPixelColor(i, c.g, c.r, c.b, c.w);
   }
   rgbwpix.show();
@@ -240,8 +261,10 @@ void Pixels::clear() {
 }
 
 void Pixels::clearEffects() {
-  for(int i = 0; i < RGBW_COUNT; i++)
-    spinners[i].clear();
+  for(int i = 0; i < RGBW_COUNT; i++) {
+    spins_blue[i].clear();
+    spins_white[i].clear();
+  }
   for(int i = 0; i < RAID_COUNT; i++)
     raidFlash[i].clear();
   for(int i = 0; i < DRUM_COUNT; i++)

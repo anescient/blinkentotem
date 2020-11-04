@@ -35,7 +35,12 @@ datatype_t Comm::receive(int timeoutms) {
         break;
 
       case 's':
-        datatype = CPU_SPIN;
+        datatype = CPU_SPIN_B;
+        datasize = RGBW_COUNT * sizeof(spin_t);
+        break;
+
+      case 't':
+        datatype = CPU_SPIN_W;
         datasize = RGBW_COUNT * sizeof(spin_t);
         break;
 
@@ -46,6 +51,11 @@ datatype_t Comm::receive(int timeoutms) {
 
       case 'i':
         datatype = CPU_GREEN;
+        datasize = RGBW_COUNT;
+        break;
+
+      case 'w':
+        datatype = CPU_WHITE;
         datasize = RGBW_COUNT;
         break;
 

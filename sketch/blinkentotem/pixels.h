@@ -18,19 +18,24 @@
       class Spinner {
         private:
           uint16_t phase = 0;
-
-        public:
           uint8_t frequency = 0;
           uint8_t v_min = 0;
           uint8_t v_max = 0;
+
+        public:
           uint8_t outvalue = 0;
 
+          void update(spin_t & spin);
+
           bool step(uint8_t dt);
+
+          bool active();
 
           void clear();
       };
 
-      Spinner spinners[RGBW_COUNT];
+      Spinner spins_blue[RGBW_COUNT];
+      Spinner spins_white[RGBW_COUNT];
 
       class Flash {
         public:
@@ -79,7 +84,11 @@
 
       void updateRGBW_G(uint8_t * green);
 
-      void updateSpins(spin_t * spins);
+      void updateRGBW_W(uint8_t * white);
+
+      void updateSpins_B(spin_t * spins);
+
+      void updateSpins_W(spin_t * spins);
 
       void flashRaid(iopulse_t * pulses);
 

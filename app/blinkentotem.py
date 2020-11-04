@@ -107,7 +107,8 @@ class Totem:
         self._serial = serial.Serial(serialport, 56000)
         self.config = self.Configuration()
         self.rgbw = [self.RGBWled() for _ in range(8)]
-        self.spinners = [self.Spinner() for _ in self.rgbw]
+        self.bluespins = [self.Spinner() for _ in self.rgbw]
+        self.whitespins = [self.Spinner() for _ in self.rgbw]
         self.rgb = [self.RGBled() for _ in range(8)]
         self.raid = self.rgb[4:8]
         self.drum = self.rgb[2:4]
@@ -117,12 +118,16 @@ class Totem:
 
         self._ep = namedtuple(
             'Endpoints',
-            'rgb rgbw spins red green raid drum lamps raidpulse drumpulse')
+            'rgb rgbw \
+            bluespins whitespins red green white \
+            raid drum lamps raidpulse drumpulse')
         self._ep.rgb = self._Endpoint('1')
         self._ep.rgbw = self._Endpoint('2')
-        self._ep.spins = self._Endpoint('s')
+        self._ep.bluespins = self._Endpoint('s')
+        self._ep.whitespins = self._Endpoint('t')
         self._ep.red = self._Endpoint('h')
         self._ep.green = self._Endpoint('i')
+        self._ep.white = self._Endpoint('w')
         self._ep.raid = self._Endpoint('r')
         self._ep.drum = self._Endpoint('d')
         self._ep.lamps = self._Endpoint('l')
@@ -159,16 +164,19 @@ class Totem:
         return updated
 
     def pushPieces(self, force=False):
-        self._ep.spins.update(self.spinners)
+        self._ep.bluespins.update(self.bluespins)
+        self._ep.whitespins.update(self.whitespins)
         self._ep.red.updateRaw([rgbw.r for rgbw in self.rgbw])
         self._ep.green.updateRaw([rgbw.g for rgbw in self.rgbw])
+        self._ep.white.updateRaw([rgbw.w for rgbw in self.rgbw])
         self._ep.raid.update(self.raid)
         self._ep.drum.update(self.drum)
         self._ep.lamps.update(self.lamps)
         self._ep.raidpulse.update(self.raidpulse)
         self._ep.drumpulse.update([self.drumpulse])
         updated = False
-        for ep in [self._ep.spins, self._ep.red, self._ep.green,
+        for ep in [self._ep.bluespins, self._ep.whitespins,
+                   self._ep.red, self._ep.green, self._ep.white,
                    self._ep.raid, self._ep.drum, self._ep.lamps,
                    self._ep.raidpulse, self._ep.drumpulse]:
             if ep.dirty or force:

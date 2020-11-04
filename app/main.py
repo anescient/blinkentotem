@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import random
 import time
 
 from blinkentotem import Totem
@@ -60,18 +61,29 @@ class CPUIndicator:
     def __init__(self, cpuindex, totem):
         self._cpuindex = cpuindex
         self._led = totem.rgbw[cpuindex]
-        self._spinner = totem.spinners[cpuindex]
+        self._bluespin = totem.bluespins[cpuindex]
+        self._whitespin = totem.whitespins[cpuindex]
         self._heat = 0
+        self._superheat = 0
         self._frequency = 0
         self._brightness = 0
 
     def update(self, cpuactivity):
         busy = cpuactivity.busy
+
         if busy > self._heat:
             self._heat += 0.02 * (busy - self._heat)
         if busy < 0.2:
             self._heat *= 0.97 + 0.03 * (busy / 0.2)
         self._led.r = unitToByte(self._heatcurve.sample(self._heat))
+
+        if self._heat > self._superheat:
+            self._superheat = 0.8 * self._superheat + 0.2 * self._heat
+        else:
+            self._superheat = 0.95 * self._superheat + 0.05 * self._heat
+        self._led.w = 0
+        if self._superheat > 0.8:
+            self._led.w = unitToByte(0.01 + (self._superheat - 0.8) / 0.2)
 
         self._led.g = unitToByte(0.5 * cpuactivity.io ** 2)
 
@@ -84,8 +96,8 @@ class CPUIndicator:
             self._brightness = 0.8 * self._brightness + 0.2 * busy
         else:
             self._brightness = 0.2 * self._brightness + 0.8 * busy
-        self._spinner.frequency = max(1, unitToByte(0.8 * self._frequency - 0.2))
-        self._spinner.brightness = max(20, unitToByte(0.2 + 0.6 * self._brightness))
+        self._bluespin.frequency = max(1, unitToByte(0.8 * self._frequency - 0.2))
+        self._bluespin.brightness = max(20, unitToByte(0.2 + 0.6 * self._brightness))
 
 
 class RaidDiskIndicator:
@@ -145,7 +157,6 @@ def main():
         led.setrgb(20, 8, 14)
     for led in totem.raid:
         led.g = 4
-
     totem.pushPieces()
 
     raidDevices = ['sdb', 'sdc', 'sdd', 'sde']
@@ -169,6 +180,10 @@ def main():
         for device, indicator in zip(raidDevices, raidIndicators):
             indicator.update(disks[device])
         rootIndicator.update(disks[rootDevice])
+
+        #for rgbw in totem.rgbw:
+        #    rgbw.w = 0
+        #totem.rgbw[random.randint(0, 7)].w = 20
 
         totem.pushPieces()
         time.sleep(0.05)
