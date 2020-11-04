@@ -102,6 +102,19 @@ class CPUIndicator:
         spin.brightness = max(30, unitToByte(0.2 + 0.7 * self.busyLagB))
 
 
+class RaidDiskIndicator:
+    def __init__(self):
+        self._divisor = 150000
+
+    def update(self, diskActivity, outPulse):
+        read, written = diskActivity.bytesread, diskActivity.byteswritten
+        if read > 0:
+            outPulse.read = max(1, min(70, read // self._divisor))
+        if written > 0:
+            outPulse.write = max(1, min(70, written // self._divisor))
+        outPulse.read = max(outPulse.read, outPulse.write // 2)
+
+
 def setDrumWhite(totem, x):
     totem.drum[0].setrgb(
         unitToByte(x * 0.28),
@@ -132,13 +145,13 @@ def main():
 
     totem.pushPieces()
 
-    raiddevices = ['sdb', 'sdc', 'sdd', 'sde']
-    rootdevice = 'sda'
-    raidDivisor = 150000
+    raidDevices = ['sdb', 'sdc', 'sdd', 'sde']
+    rootDevice = 'sda'
     rootDivisor = 800000
 
-    systemActivity = SystemActivity([rootdevice] + raiddevices)
-    cpuindicators = [CPUIndicator() for _ in range(8)]
+    systemActivity = SystemActivity([rootDevice] + raidDevices)
+    cpuIndicators = [CPUIndicator() for _ in range(8)]
+    raidIndicators = [RaidDiskIndicator() for _ in raidDevices]
 
     frame = 0
     while True:
@@ -147,7 +160,7 @@ def main():
         if frame % 3 == 0:
             cpus = systemActivity.updateCPUs()
             for activity, indicator, led, spin in zip(
-                    cpus, cpuindicators, totem.rgbw, totem.spinners):
+                    cpus, cpuIndicators, totem.rgbw, totem.spinners):
                 indicator.update(activity)
                 indicator.step()
                 indicator.set_led(led)
@@ -155,15 +168,12 @@ def main():
 
         disks = systemActivity.updateDisks()
 
-        for device, pulse in zip(raiddevices, totem.raidpulse):
+        for device, indicator, pulse in zip(
+                raidDevices, raidIndicators, totem.raidpulse):
             activity = disks[device]
-            if activity.bytesread > 0:
-                pulse.read = max(1, min(70, activity.bytesread // raidDivisor))
-            if activity.byteswritten > 0:
-                pulse.write = max(1, min(70, activity.byteswritten // raidDivisor))
-            pulse.read = max(pulse.read, pulse.write // 2)
+            indicator.update(activity, pulse)
 
-        activity = disks[rootdevice]
+        activity = disks[rootDevice]
         pulse = totem.drumpulse
         if activity.bytesread > 0:
             pulse.read = max(4, min(70, activity.bytesread // rootDivisor))
