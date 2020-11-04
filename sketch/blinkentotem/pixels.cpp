@@ -18,6 +18,7 @@ bool Pixels::Spinner::step(uint8_t dt) {
 }
 
 void Pixels::Spinner::clear() {
+  phase = random(0xff00);
   frequency = 0;
   v_min = 0;
   v_max = 0;
@@ -73,6 +74,9 @@ void Pixels::begin() {
   pinMode(RGB_PIN, OUTPUT);
   rgbpix = Adafruit_NeoPixel(RGB_COUNT, RGB_PIN);
   rgbpix.begin();
+
+  clear();
+  clearEffects();
 }
 
 void Pixels::setConfig(config_t & config) {
