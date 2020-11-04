@@ -115,15 +115,33 @@ class RaidDiskIndicator:
         outPulse.read = max(outPulse.read, outPulse.write // 2)
 
 
-def setDrumWhite(totem, x):
-    totem.drum[0].setrgb(
-        unitToByte(x * 0.28),
-        unitToByte(x * 0.33),
-        unitToByte(x * 0.15))
-    totem.drum[1].setrgb(
-        unitToByte(x * 0.15),
-        unitToByte(x * 0.15),
-        unitToByte(x * 0.06))
+class DrumIndicator:
+    def __init__(self):
+        self._ssdDivisor = 800000
+        self._white = 0.5
+
+    def update(self, diskActivity, outTotem):
+        read, written = diskActivity.bytesread, diskActivity.byteswritten
+        pulse = outTotem.drumpulse
+        if read > 0:
+            pulse.read = max(4, min(70, read // self._ssdDivisor))
+        if written > 0:
+            pulse.write = max(4, min(70, written // self._ssdDivisor))
+
+        if read or written:
+            self._white = max(0.3, self._white - 0.06)
+        else:
+            self._white = min(1.0, self._white + 0.02)
+
+        x = min(0.5, self._white)
+        outTotem.drum[0].setrgb(
+            unitToByte(x * 0.28),
+            unitToByte(x * 0.33),
+            unitToByte(x * 0.15))
+        outTotem.drum[1].setrgb(
+            unitToByte(x * 0.15),
+            unitToByte(x * 0.15),
+            unitToByte(x * 0.06))
 
 
 def main():
@@ -140,18 +158,15 @@ def main():
     for led in totem.raid:
         led.g = 2
 
-    drumBrightness = 0.5
-    setDrumWhite(totem, drumBrightness)
-
     totem.pushPieces()
 
     raidDevices = ['sdb', 'sdc', 'sdd', 'sde']
     rootDevice = 'sda'
-    rootDivisor = 800000
 
     systemActivity = SystemActivity([rootDevice] + raidDevices)
     cpuIndicators = [CPUIndicator() for _ in range(8)]
     raidIndicators = [RaidDiskIndicator() for _ in raidDevices]
+    rootIndicator = DrumIndicator()
 
     frame = 0
     while True:
@@ -173,17 +188,7 @@ def main():
             activity = disks[device]
             indicator.update(activity, pulse)
 
-        activity = disks[rootDevice]
-        pulse = totem.drumpulse
-        if activity.bytesread > 0:
-            pulse.read = max(4, min(70, activity.bytesread // rootDivisor))
-        if activity.byteswritten > 0:
-            pulse.write = max(4, min(70, activity.byteswritten // rootDivisor))
-        if activity.bytesread or activity.byteswritten:
-            drumBrightness = max(0.3, drumBrightness - 0.06)
-        else:
-            drumBrightness = min(1.0, drumBrightness + 0.02)
-        setDrumWhite(totem, min(0.5, drumBrightness))
+        rootIndicator.update(disks[rootDevice], totem)
 
         totem.pushPieces()
         time.sleep(0.05)
