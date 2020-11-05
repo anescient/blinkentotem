@@ -68,6 +68,11 @@ void loop() {
       pixels.showRGBW();
       break;
 
+    case CPU_FADE_W:
+      pixels.updateFades_W(comm.buffer.fades);
+      pixels.showRGBW();
+      break;
+
     case CPU_RED:
       pixels.updateRGBW_R(comm.buffer.bytes);
       pixels.showRGBW();

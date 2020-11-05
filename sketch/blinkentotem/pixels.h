@@ -37,6 +37,31 @@
       Spinner spins_blue[RGBW_COUNT];
       Spinner spins_white[RGBW_COUNT];
 
+      class Fader {
+        private:
+          union {
+            uint16_t whole;
+            struct {
+              uint8_t low;
+              uint8_t high;
+            };
+          } value;
+          uint16_t decayrate;
+
+        public:
+          uint8_t outvalue = 0;
+
+          void update(fade_t & fade);
+
+          bool step(uint8_t dt);
+
+          bool active();
+
+          void clear();
+      };
+
+      Fader fades_white[RGBW_COUNT];
+
       class Flash {
         public:
           uint16_t red = 0;
@@ -89,6 +114,8 @@
       void updateSpins_B(spin_t * spins);
 
       void updateSpins_W(spin_t * spins);
+
+      void updateFades_W(fade_t * fades);
 
       void flashRaid(iopulse_t * pulses);
 

@@ -16,6 +16,7 @@
     RGBWFRAME, // data for entire rgbw string
     CPU_SPIN_B, // data for spins on rgbw blue
     CPU_SPIN_W, // data for spins on rgbw white
+    CPU_FADE_W, // data for faders on rgbw white
     CPU_RED, // 8 bytes, rgbw string red
     CPU_GREEN, // 8 bytes, rgbw string green
     CPU_WHITE, // 8 bytes, rgbw string white
@@ -54,6 +55,11 @@
     uint8_t brightness;
   };
 
+  struct fade_t {
+    uint8_t value;
+    uint8_t decayrate;
+  };
+
   struct iopulse_t {
     uint8_t read;
     uint8_t write;
@@ -68,8 +74,9 @@
         config_t    config;
         rgb_t       rgb [RGB_COUNT];
         rgbw_t      rgbw [RGBW_COUNT];
-        spin_t      spins [8];
-        iopulse_t   pulses [4];
+        spin_t      spins [RGBW_COUNT];
+        fade_t      fades [RGBW_COUNT];
+        iopulse_t   pulses [RAID_COUNT];
       } buffer;
 
       void begin();

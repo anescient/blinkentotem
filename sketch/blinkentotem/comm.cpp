@@ -44,6 +44,11 @@ datatype_t Comm::receive(int timeoutms) {
         datasize = RGBW_COUNT * sizeof(spin_t);
         break;
 
+      case 'z':
+        datatype = CPU_FADE_W;
+        datasize = RGBW_COUNT * sizeof(fade_t);
+        break;
+
       case 'h':
         datatype = CPU_RED;
         datasize = RGBW_COUNT;

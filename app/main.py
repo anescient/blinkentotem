@@ -63,8 +63,8 @@ class CPUIndicator:
         self._led = totem.rgbw[cpuindex]
         self._bluespin = totem.bluespins[cpuindex]
         self._whitespin = totem.whitespins[cpuindex]
+        self._whitefade = totem.whitefades[cpuindex]
         self._heat = 0
-        self._superheat = 0
         self._frequency = 0
         self._brightness = 0
 
@@ -76,14 +76,9 @@ class CPUIndicator:
         if busy < 0.2:
             self._heat *= 0.97 + 0.03 * (busy / 0.2)
         self._led.r = unitToByte(self._heatcurve.sample(self._heat))
-
-        if self._heat > self._superheat:
-            self._superheat = 0.8 * self._superheat + 0.2 * self._heat
-        else:
-            self._superheat = 0.95 * self._superheat + 0.05 * self._heat
-        self._led.w = 0
-        if self._superheat > 0.8:
-            self._led.w = unitToByte(0.01 + (self._superheat - 0.8) / 0.2)
+        if self._heat > 0.8:
+            self._whitefade.pumpvalue = unitToByte((self._heat - 0.8) / 0.2)
+            self._whitefade.decayrate = 5
 
         self._led.g = unitToByte(0.5 * cpuactivity.io ** 2)
 
@@ -180,10 +175,6 @@ def main():
         for device, indicator in zip(raidDevices, raidIndicators):
             indicator.update(disks[device])
         rootIndicator.update(disks[rootDevice])
-
-        #for rgbw in totem.rgbw:
-        #    rgbw.w = 0
-        #totem.rgbw[random.randint(0, 7)].w = 20
 
         totem.pushPieces()
         time.sleep(0.05)

@@ -39,6 +39,36 @@ void Pixels::Spinner::clear() {
   outvalue = 0;
 }
 
+void Pixels::Fader::update(fade_t & fade) {
+  if(fade.value > value.high)
+    value.high = fade.value;
+  decayrate = 4 * fade.decayrate;
+}
+
+bool Pixels::Fader::step(uint8_t dt) {
+  if(outvalue == 0 && value.whole == 0)
+    return false;
+  uint16_t delta = dt * decayrate;
+  if(value.whole < delta)
+    value.whole = 0;
+  else
+    value.whole -= delta;
+  uint8_t v = Adafruit_NeoPixel::gamma8(value.high);
+  if(v != outvalue) {
+    outvalue = v;
+    return true;
+  }
+  return false;
+}
+
+bool Pixels::Fader::active() {
+  return value.whole != 0;
+}
+
+void Pixels::Fader::clear() {
+  value.whole = 0;
+}
+
 bool Pixels::Flash::step(uint8_t dt) {
   if(dt == 0)
     return false;
@@ -152,6 +182,11 @@ void Pixels::updateSpins_W(spin_t * spins) {
     spins_white[i].update(spins[i]);
 }
 
+void Pixels::updateFades_W(fade_t * fades) {
+  for(int i = 0; i < RGBW_COUNT; i++)
+    fades_white[i].update(fades[i]);
+}
+
 void Pixels::flashRaid(iopulse_t * pulses) {
   for(int i = 0; i < RAID_COUNT; i++) {
     iopulse_t & pulse = pulses[i];
@@ -179,6 +214,9 @@ void Pixels::step(uint8_t dt) {
     Spinner & spin_w = spins_white[i];
     if(spin_w.active())
       changed |= spin_w.step(dt);
+    Fader & fade_w = fades_white[i];
+    if(fade_w.active())
+      changed |= fade_w.step(dt);
   }
   if(changed)
     showRGBW();
@@ -249,6 +287,9 @@ void Pixels::showRGBW() {
     Spinner & spin_w = spins_white[i];
     if(spin_w.active())
       c.w = spin_w.outvalue;
+    Fader & fade_w = fades_white[i];
+    if(fade_w.active() && fade_w.outvalue > c.w)
+      c.w = fade_w.outvalue;
     rgbwpix.setPixelColor(i, c.g, c.r, c.b, c.w);
   }
   rgbwpix.show();
@@ -264,6 +305,7 @@ void Pixels::clearEffects() {
   for(int i = 0; i < RGBW_COUNT; i++) {
     spins_blue[i].clear();
     spins_white[i].clear();
+    fades_white[i].clear();
   }
   for(int i = 0; i < RAID_COUNT; i++)
     raidFlash[i].clear();
