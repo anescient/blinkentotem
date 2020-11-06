@@ -49,68 +49,47 @@ void loop() {
       break;
 
     case RGBFRAME:
-      pixels.updateRGB(comm.buffer.rgb);
-      pixels.showRGB();
+      pixels.setRGB(comm.buffer.rgb);
       break;
 
     case RGBWFRAME:
-      pixels.updateRGBW(comm.buffer.rgbw);
-      pixels.showRGBW();
+      pixels.setRGBW(comm.buffer.rgbw);
       break;
 
     case CPU_SPIN_B:
-      pixels.updateSpins_B(comm.buffer.spins);
-      pixels.showRGBW();
-      break;
-
-    case CPU_SPIN_W:
-      pixels.updateSpins_W(comm.buffer.spins);
-      pixels.showRGBW();
+      pixels.setCPU_bluespins(comm.buffer.spins);
       break;
 
     case CPU_FADE_W:
-      pixels.updateFades_W(comm.buffer.fades);
-      pixels.showRGBW();
+      pixels.setCPU_whitefades(comm.buffer.fades);
       break;
 
     case CPU_RED:
-      pixels.updateRGBW_R(comm.buffer.bytes);
-      pixels.showRGBW();
+      pixels.setCPU_R(comm.buffer.bytes);
       break;
 
     case CPU_GREEN:
-      pixels.updateRGBW_G(comm.buffer.bytes);
-      pixels.showRGBW();
-      break;
-
-    case CPU_WHITE:
-      pixels.updateRGBW_W(comm.buffer.bytes);
-      pixels.showRGBW();
+      pixels.setCPU_G(comm.buffer.bytes);
       break;
 
     case RAID:
       pixels.updateRGB(comm.buffer.rgb, RAID_OFFSET, RAID_COUNT);
-      pixels.showRGB();
       break;
 
     case DRUM:
       pixels.updateRGB(comm.buffer.rgb, DRUM_OFFSET, DRUM_COUNT);
-      pixels.showRGB();
       break;
 
-    case LAMPS:
+    case LAMP:
       pixels.updateRGB(comm.buffer.rgb, LAMP_OFFSET, LAMP_COUNT);
-      pixels.showRGB();
       break;
 
     case RAIDFLASH:
-      pixels.flashRaid(comm.buffer.pulses);
-      pixels.showRGB();
+      pixels.pulseRaid(comm.buffer.pulses);
       break;
 
     case DRUMFLASH:
-      pixels.flashDrum(comm.buffer.pulses[0]);
-      pixels.showRGB();
+      pixels.pulseDrum(comm.buffer.pulses[0]);
       break;
   }
   idleTime = 0;

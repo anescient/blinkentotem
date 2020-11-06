@@ -62,7 +62,6 @@ class CPUIndicator:
         self._cpuindex = cpuindex
         self._led = totem.rgbw[cpuindex]
         self._bluespin = totem.bluespins[cpuindex]
-        self._whitespin = totem.whitespins[cpuindex]
         self._whitefade = totem.whitefades[cpuindex]
         self._heat = 0
         self._frequency = 0
@@ -141,7 +140,6 @@ class DrumIndicator:
 
 def main():
     totem = Totem()
-    totem.config.maxPulse = 40
     totem.config.raidRed = 30
     totem.config.raidGreen = 100
     totem.config.drumRed = 150

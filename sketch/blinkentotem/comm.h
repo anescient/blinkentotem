@@ -6,7 +6,7 @@
   #include <HardwareSerial.h>
   #include "hwconfig.h"
 
-  #define COMMS_BUFFER_SIZE (RGBW_COUNT * sizeof(rgbw_t))
+  #define COMM_BUFFER_SIZE (RGBW_COUNT * sizeof(rgbw_t))
 
   enum datatype_t {
     NONE, // timeout or error or whatever
@@ -15,26 +15,23 @@
     RGBFRAME, // data for entire rgb string
     RGBWFRAME, // data for entire rgbw string
     CPU_SPIN_B, // data for spins on rgbw blue
-    CPU_SPIN_W, // data for spins on rgbw white
+    //CPU_SPIN_B_PHASE,
     CPU_FADE_W, // data for faders on rgbw white
     CPU_RED, // 8 bytes, rgbw string red
     CPU_GREEN, // 8 bytes, rgbw string green
-    CPU_WHITE, // 8 bytes, rgbw string white
-    LAMPS, // rgb[0] to rgb[1]
+    LAMP, // rgb[0] to rgb[1]
     DRUM, // rgb[2] to rgb[3]
     RAID, // rgb[4] to rgb[7]
     RAIDFLASH, // iopulse_t[4]
     DRUMFLASH // iopulse_t[2]
   };
 
-  // also used for framebuffer
   struct rgb_t {
     uint8_t r;
     uint8_t g;
     uint8_t b;
   };
 
-  // also used for framebuffer
   struct rgbw_t {
     uint8_t r;
     uint8_t g;
@@ -43,7 +40,6 @@
   };
 
   struct config_t {
-    uint8_t maxPulse;
     uint8_t raidRed;
     uint8_t raidGreen;
     uint8_t drumRed;
@@ -69,7 +65,7 @@
     public:
 
       union {
-        uint8_t     bytes [COMMS_BUFFER_SIZE];
+        uint8_t     bytes [COMM_BUFFER_SIZE];
         char        command;
         config_t    config;
         rgb_t       rgb [RGB_COUNT];

@@ -104,15 +104,13 @@ class Totem:
 
     class Configuration:
         def __init__(self):
-            self.maxPulse = 40
             self.raidRed = 30
             self.raidGreen = 100
             self.drumRed = 150
             self.drumGreen = 200
 
         def getPayload(self):
-            return [self.maxPulse,
-                    self.raidRed,
+            return [self.raidRed,
                     self.raidGreen,
                     self.drumRed,
                     self.drumGreen]
@@ -122,7 +120,6 @@ class Totem:
         self.config = self.Configuration()
         self.rgbw = [self.RGBWled() for _ in range(8)]
         self.bluespins = [self.Spinner() for _ in self.rgbw]
-        self.whitespins = [self.Spinner() for _ in self.rgbw]
         self.whitefades = [self.Fader() for _ in self.rgbw]
         self.rgb = [self.RGBled() for _ in range(8)]
         self.raid = self.rgb[4:8]
@@ -134,13 +131,12 @@ class Totem:
         self._ep = namedtuple(
             'Endpoints',
             'rgb rgbw \
-            bluespins whitespins whitefades \
+            bluespins whitefades \
             red green white \
             raid drum lamps raidpulse drumpulse')
         self._ep.rgb = self._Endpoint('1')
         self._ep.rgbw = self._Endpoint('2')
         self._ep.bluespins = self._Endpoint('s')
-        self._ep.whitespins = self._Endpoint('t')
         self._ep.whitefades = self._PulseEndpoint('z')
         self._ep.red = self._Endpoint('h')
         self._ep.green = self._Endpoint('i')
@@ -182,7 +178,6 @@ class Totem:
 
     def pushPieces(self, force=False):
         self._ep.bluespins.update(self.bluespins)
-        self._ep.whitespins.update(self.whitespins)
         self._ep.whitefades.update(self.whitefades)
         self._ep.red.updateRaw([rgbw.r for rgbw in self.rgbw])
         self._ep.green.updateRaw([rgbw.g for rgbw in self.rgbw])
@@ -193,7 +188,7 @@ class Totem:
         self._ep.raidpulse.update(self.raidpulse)
         self._ep.drumpulse.update([self.drumpulse])
         updated = False
-        for ep in [self._ep.bluespins, self._ep.whitespins, self._ep.whitefades,
+        for ep in [self._ep.bluespins, self._ep.whitefades,
                    self._ep.red, self._ep.green, self._ep.white,
                    self._ep.raid, self._ep.drum, self._ep.lamps,
                    self._ep.raidpulse, self._ep.drumpulse]:

@@ -5,6 +5,7 @@
   #include <Adafruit_NeoPixel.h>
   #include "hwconfig.h"
   #include "comm.h"
+  #include "led.h"
 
   class Pixels {
     private:
@@ -15,83 +16,24 @@
 
       bool offline = false;
 
-      class Spinner {
-        private:
-          uint16_t phase = 0;
-          uint8_t frequency = 0;
-          uint8_t v_min = 0;
-          uint8_t v_max = 0;
-
-        public:
-          uint8_t outvalue = 0;
-
-          void update(spin_t & spin);
-
-          bool step(uint8_t dt);
-
-          bool active();
-
-          void clear();
-      };
-
-      Spinner spins_blue[RGBW_COUNT];
-      Spinner spins_white[RGBW_COUNT];
-
-      class Fader {
-        private:
-          union {
-            uint16_t whole;
-            struct {
-              uint8_t low;
-              uint8_t high;
-            };
-          } value;
-          uint16_t decayrate;
-
-        public:
-          uint8_t outvalue = 0;
-
-          void update(fade_t & fade);
-
-          bool step(uint8_t dt);
-
-          bool active();
-
-          void clear();
-      };
-
-      Fader fades_white[RGBW_COUNT];
-
-      class Flash {
-        public:
-          uint16_t red = 0;
-          uint16_t green = 0;
-
-          bool step(uint8_t dt);
-
-          bool active();
-
-          void clear();
-      };
-
-      Flash raidFlash[RAID_COUNT];
       uint8_t raidRed = 30;
       uint8_t raidGreen = 70;
 
-      Flash drumFlash[DRUM_COUNT];
       uint8_t drumRed = 150;
       uint8_t drumGreen = 200;
-      bool drumFlip = false;
+      uint8_t drumFlip = 0;
 
-      uint16_t maxPulse = 1000;
+      bool rgbDirty = true;
+      bool rgbwDirty = true;
 
       void waitForPixels();
-
-      void addPulse(uint16_t & target, uint8_t x);
+      void showRGB();
+      void showRGBW();
 
     public:
-      rgb_t rgb[RGB_COUNT];
-      rgbw_t rgbw[RGBW_COUNT];
+
+      RGBLED rgb[RGB_COUNT];
+      RGBWLED rgbw[RGBW_COUNT];
 
       void begin();
 
@@ -99,36 +41,32 @@
 
       void setOffline(bool offline);
 
-      void updateRGB(rgb_t * rgbframe);
-
-      void updateRGB(rgb_t * rgbframe, size_t skip, size_t count);
-
-      void updateRGBW(rgbw_t * rgbwframe);
-
-      void updateRGBW_R(uint8_t * red);
-
-      void updateRGBW_G(uint8_t * green);
-
-      void updateRGBW_W(uint8_t * white);
-
-      void updateSpins_B(spin_t * spins);
-
-      void updateSpins_W(spin_t * spins);
-
-      void updateFades_W(fade_t * fades);
-
-      void flashRaid(iopulse_t * pulses);
-
-      void flashDrum(iopulse_t & pulse);
-
       void step(uint8_t dt);
 
-      void showRGB();
 
-      void showRGBW();
-
-      void clear();
+      void clearColors();
 
       void clearEffects();
+
+      void setRGB(rgb_t * rgbframe);
+
+      void setRGBW(rgbw_t * rgbwframe);
+
+      void updateRGB(rgb_t * rgbframe, size_t index, size_t count);
+
+
+      void setCPU_R(uint8_t * red);
+
+      void setCPU_G(uint8_t * green);
+
+      void setCPU_bluespins(spin_t * spins);
+
+      void setCPU_whitefades(fade_t * fades);
+
+
+      void pulseRaid(iopulse_t * pulses);
+
+      void pulseDrum(iopulse_t & pulse);
   };
+
 #endif

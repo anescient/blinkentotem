@@ -11,7 +11,7 @@ datatype_t Comm::receive(int timeoutms) {
   size_t datasize = 0;
   Serial.setTimeout(timeoutms);
   if(Serial.find('$')) {
-    size_t headersize = Serial.readBytesUntil('\0', buffer.bytes, COMMS_BUFFER_SIZE);
+    size_t headersize = Serial.readBytesUntil('\0', buffer.bytes, COMM_BUFFER_SIZE);
     if(headersize == 0)
       return NONE;
     switch(buffer.command) {
@@ -39,11 +39,6 @@ datatype_t Comm::receive(int timeoutms) {
         datasize = RGBW_COUNT * sizeof(spin_t);
         break;
 
-      case 't':
-        datatype = CPU_SPIN_W;
-        datasize = RGBW_COUNT * sizeof(spin_t);
-        break;
-
       case 'z':
         datatype = CPU_FADE_W;
         datasize = RGBW_COUNT * sizeof(fade_t);
@@ -59,11 +54,6 @@ datatype_t Comm::receive(int timeoutms) {
         datasize = RGBW_COUNT;
         break;
 
-      case 'w':
-        datatype = CPU_WHITE;
-        datasize = RGBW_COUNT;
-        break;
-
       case 'r':
         datatype = RAID;
         datasize = RAID_COUNT * sizeof(rgb_t);
@@ -75,7 +65,7 @@ datatype_t Comm::receive(int timeoutms) {
         break;
 
       case 'l':
-        datatype = LAMPS;
+        datatype = LAMP;
         datasize = LAMP_COUNT * sizeof(rgb_t);
         break;
 
@@ -88,7 +78,6 @@ datatype_t Comm::receive(int timeoutms) {
         datatype = DRUMFLASH;
         datasize = sizeof(iopulse_t);
         break;
-
     }
 
     if(datasize > 0 && Serial.readBytes(buffer.bytes, datasize) != datasize) {
