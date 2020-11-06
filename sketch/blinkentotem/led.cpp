@@ -72,6 +72,20 @@ bool RGBWLED::setRGBW(rgbw_t & rgbw) {
   return true;
 }
 
+bool RGBWLED::setRed(uint8_t red) {
+  if(r == red)
+    return false;
+  r = red;
+  return true;
+}
+
+bool RGBWLED::setGreen(uint8_t green) {
+  if(g == green)
+    return false;
+  g = green;
+  return true;
+}
+
 bool RGBWLED::step(uint8_t dt) {
   if(dt == 0)
     return false;

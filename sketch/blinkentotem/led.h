@@ -46,6 +46,10 @@
 
       bool setRGBW(rgbw_t & rgbw);
 
+      bool setRed(uint8_t red);
+
+      bool setGreen(uint8_t green);
+
       bool step(uint8_t dt);
 
       void renderTo(Adafruit_NeoPixel & rgbwPix, int index);

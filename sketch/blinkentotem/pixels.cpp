@@ -115,26 +115,22 @@ void Pixels::updateRGB(rgb_t * rgbframe, size_t index, size_t count) {
 
 void Pixels::setCPU_R(uint8_t * red) {
   for(int i = 0; i < RGBW_COUNT; i++)
-    rgbw[i].r = red[i];
-  rgbwDirty = true;
+    rgbwDirty |= rgbw[i].setRed(red[i]);
 }
 
 void Pixels::setCPU_G(uint8_t * green) {
   for(int i = 0; i < RGBW_COUNT; i++)
-    rgbw[i].g = green[i];
-  rgbwDirty = true;
+    rgbwDirty |= rgbw[i].setGreen(green[i]);
 }
 
 void Pixels::setCPU_bluespins(spin_t * spins) {
   for(int i = 0; i < RGBW_COUNT; i++)
     rgbw[i].blue_spin.set(spins[i]);
-  rgbwDirty = true;
 }
 
 void Pixels::setCPU_whitefades(fade_t * fades) {
   for(int i = 0; i < RGBW_COUNT; i++)
     rgbw[i].white_fade.set(fades[i]);
-  rgbwDirty = true;
 }
 
 void Pixels::pulseRaid(iopulse_t * pulses) {
