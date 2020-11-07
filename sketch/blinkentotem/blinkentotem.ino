@@ -68,6 +68,11 @@ void loop() {
       pixels.setCPU_whitefades(comm.buffer.fades);
       break;
 
+    case CPU_GLOW_R:
+      for(int i = 0; i < RGBW_COUNT; i++)
+        pixels.rgbw[i].red_glow.setTarget(comm.buffer.bytes[i]);
+      break;
+
     case RAID:
       pixels.updateRGB(comm.buffer.rgb, RAID_OFFSET, RAID_COUNT);
       break;

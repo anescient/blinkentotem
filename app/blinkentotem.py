@@ -72,6 +72,13 @@ class Totem:
         def getPayload(self):
             return [self.frequency, self.brightness]
 
+    class SlowGlow:
+        def __init__(self):
+            self.targetvalue = 0
+
+        def getPayload(self):
+            return [self.targetvalue]
+
     class Fader:
         def __init__(self):
             self.pumpvalue = 0
@@ -122,6 +129,7 @@ class Totem:
         self.bluespins = [self.Spinner() for _ in self.rgbw]
         self.greenfades = [self.Fader() for _ in self.rgbw]
         self.whitefades = [self.Fader() for _ in self.rgbw]
+        self.redglows = [self.SlowGlow() for _ in self.rgbw]
         self.rgb = [self.RGBled() for _ in range(8)]
         self.raid = self.rgb[4:8]
         self.drum = self.rgb[2:4]
@@ -132,13 +140,14 @@ class Totem:
         self._ep = namedtuple(
             'Endpoints',
             'rgb rgbw \
-            bluespins greenfades whitefades \
+            bluespins greenfades whitefades redglows \
             raid drum lamps raidpulse drumpulse')
         self._ep.rgb = self._Endpoint('1')
         self._ep.rgbw = self._Endpoint('2')
         self._ep.bluespins = self._Endpoint('s')
         self._ep.greenfades = self._PulseEndpoint('i')
         self._ep.whitefades = self._PulseEndpoint('z')
+        self._ep.redglows = self._Endpoint('g')
         self._ep.raid = self._Endpoint('r')
         self._ep.drum = self._Endpoint('d')
         self._ep.lamps = self._Endpoint('l')
@@ -178,6 +187,7 @@ class Totem:
         self._ep.bluespins.update(self.bluespins)
         self._ep.greenfades.update(self.greenfades)
         self._ep.whitefades.update(self.whitefades)
+        self._ep.redglows.update(self.redglows)
 
         self._ep.rgbw.update(self.rgbw)
 
@@ -189,7 +199,7 @@ class Totem:
         self._ep.drumpulse.update([self.drumpulse])
         updated = False
         for ep in [self._ep.bluespins,
-                   self._ep.greenfades, self._ep.whitefades,
+                   self._ep.greenfades, self._ep.whitefades, self._ep.redglows,
                    self._ep.rgbw,
                    self._ep.raid, self._ep.drum, self._ep.lamps,
                    self._ep.raidpulse, self._ep.drumpulse]:

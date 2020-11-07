@@ -91,3 +91,30 @@ uint8_t Flash::lighten(uint8_t minimum) {
 void Flash::clear() {
   timer = 0;
 }
+
+void SlowGlow::setTarget(uint8_t value) {
+  targetvalue = value;
+}
+
+bool SlowGlow::step(uint8_t dt) {
+  if(outvalue == targetvalue)
+    return false;
+  timeaccumulator += dt;
+  if(timeaccumulator > ticklength) {
+    timeaccumulator -= ticklength;
+    if(outvalue > targetvalue)
+      outvalue--;
+    else
+      outvalue++;
+  }
+  return true;
+}
+
+uint8_t SlowGlow::lighten(uint8_t minimum) {
+  return max(minimum, outvalue);
+}
+
+void SlowGlow::clear() {
+  outvalue = 0;
+  targetvalue = 0;
+}

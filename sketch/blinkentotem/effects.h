@@ -63,4 +63,22 @@
       void clear();
   };
 
+  class SlowGlow {
+    private:
+      uint16_t timeaccumulator = 0;
+      uint16_t ticklength = 100;
+      uint8_t outvalue = 0;
+      uint8_t targetvalue = 0;
+
+    public:
+
+      void setTarget(uint8_t value);
+
+      bool step(uint8_t dt);
+
+      uint8_t lighten(uint8_t minimum);
+
+      void clear();
+  };
+
 #endif

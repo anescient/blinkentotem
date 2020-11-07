@@ -51,6 +51,7 @@ void RGBWLED::clearEffects() {
   blue_spin.clear();
   white_fade.clear();
   green_fade.clear();
+  red_glow.clear();
 }
 
 bool RGBWLED::setRGBW(rgbw_t & rgbw) {
@@ -63,24 +64,19 @@ bool RGBWLED::setRGBW(rgbw_t & rgbw) {
   return true;
 }
 
-bool RGBWLED::setRed(uint8_t red) {
-  if(r == red)
-    return false;
-  r = red;
-  return true;
-}
-
 bool RGBWLED::step(uint8_t dt) {
   bool changed = false;
   changed |= blue_spin.step(dt);
   changed |= white_fade.step(dt);
   changed |= green_fade.step(dt);
+  changed |= red_glow.step(dt);
   return changed;
 }
 
 void RGBWLED::renderTo(Adafruit_NeoPixel & rgbwPix, int index) {
   rgbwPix.setPixelColor(index,
-    green_fade.lighten(g), r,
+    green_fade.lighten(g),
+    red_glow.lighten(r),
     blue_spin.lighten(b),
     white_fade.lighten(w));
 }

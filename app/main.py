@@ -63,6 +63,7 @@ class CPUIndicator:
         self._bluespin = totem.bluespins[cpuindex]
         self._greenfade = totem.greenfades[cpuindex]
         self._whitefade = totem.whitefades[cpuindex]
+        self._redglow = totem.redglows[cpuindex]
         self._heat = 0
         self._frequency = 0
         self._brightness = 0
@@ -74,7 +75,7 @@ class CPUIndicator:
             self._heat += 0.02 * (busy - self._heat)
         if busy < 0.2:
             self._heat *= 0.97 + 0.03 * (busy / 0.2)
-        self._led.r = unitToByte(self._heatcurve.sample(self._heat))
+        self._redglow.targetvalue = unitToByte(self._heatcurve.sample(self._heat))
         if self._heat > 0.8:
             self._whitefade.pumpvalue = unitToByte((self._heat - 0.8) / 0.2)
             self._whitefade.decayrate = 5

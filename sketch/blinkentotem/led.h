@@ -41,6 +41,8 @@
       Fader white_fade;
       Fader green_fade;
 
+      SlowGlow red_glow;
+
       void clearColor();
 
       void clearEffects();
