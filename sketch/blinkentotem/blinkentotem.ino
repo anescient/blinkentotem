@@ -60,16 +60,16 @@ void loop() {
       pixels.setCPU_bluespins(comm.buffer.spins);
       break;
 
+    case CPU_FADE_G:
+      pixels.setCPU_greenfades(comm.buffer.fades);
+      break;
+
     case CPU_FADE_W:
       pixels.setCPU_whitefades(comm.buffer.fades);
       break;
 
     case CPU_RED:
       pixels.setCPU_R(comm.buffer.bytes);
-      break;
-
-    case CPU_GREEN:
-      pixels.setCPU_G(comm.buffer.bytes);
       break;
 
     case RAID:

@@ -120,6 +120,7 @@ class Totem:
         self.config = self.Configuration()
         self.rgbw = [self.RGBWled() for _ in range(8)]
         self.bluespins = [self.Spinner() for _ in self.rgbw]
+        self.greenfades = [self.Fader() for _ in self.rgbw]
         self.whitefades = [self.Fader() for _ in self.rgbw]
         self.rgb = [self.RGBled() for _ in range(8)]
         self.raid = self.rgb[4:8]
@@ -131,15 +132,14 @@ class Totem:
         self._ep = namedtuple(
             'Endpoints',
             'rgb rgbw \
-            bluespins whitefades \
-            red green white \
+            bluespins greenfades whitefades red white \
             raid drum lamps raidpulse drumpulse')
         self._ep.rgb = self._Endpoint('1')
         self._ep.rgbw = self._Endpoint('2')
         self._ep.bluespins = self._Endpoint('s')
+        self._ep.greenfades = self._PulseEndpoint('i')
         self._ep.whitefades = self._PulseEndpoint('z')
         self._ep.red = self._Endpoint('h')
-        self._ep.green = self._Endpoint('i')
         self._ep.white = self._Endpoint('w')
         self._ep.raid = self._Endpoint('r')
         self._ep.drum = self._Endpoint('d')
@@ -178,9 +178,9 @@ class Totem:
 
     def pushPieces(self, force=False):
         self._ep.bluespins.update(self.bluespins)
+        self._ep.greenfades.update(self.greenfades)
         self._ep.whitefades.update(self.whitefades)
         self._ep.red.updateRaw([rgbw.r for rgbw in self.rgbw])
-        self._ep.green.updateRaw([rgbw.g for rgbw in self.rgbw])
         self._ep.white.updateRaw([rgbw.w for rgbw in self.rgbw])
         self._ep.raid.update(self.raid)
         self._ep.drum.update(self.drum)
@@ -188,8 +188,8 @@ class Totem:
         self._ep.raidpulse.update(self.raidpulse)
         self._ep.drumpulse.update([self.drumpulse])
         updated = False
-        for ep in [self._ep.bluespins, self._ep.whitefades,
-                   self._ep.red, self._ep.green, self._ep.white,
+        for ep in [self._ep.bluespins, self._ep.greenfades, self._ep.whitefades,
+                   self._ep.red, self._ep.white,
                    self._ep.raid, self._ep.drum, self._ep.lamps,
                    self._ep.raidpulse, self._ep.drumpulse]:
             if ep.dirty or force:

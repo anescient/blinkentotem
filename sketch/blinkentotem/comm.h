@@ -12,13 +12,12 @@
     NONE, // timeout or error or whatever
     PING, // watchdog reset
     CONFIG,
-    RGBFRAME, // data for entire rgb string
-    RGBWFRAME, // data for entire rgbw string
-    CPU_SPIN_B, // data for spins on rgbw blue
-    //CPU_SPIN_B_PHASE,
-    CPU_FADE_W, // data for faders on rgbw white
+    RGBFRAME, // entire rgb string
+    RGBWFRAME, // entire rgbw string
+    CPU_SPIN_B, // spins on rgbw blue
+    CPU_FADE_G, // faders on rgbw green
+    CPU_FADE_W, // faders on rgbw white
     CPU_RED, // 8 bytes, rgbw string red
-    CPU_GREEN, // 8 bytes, rgbw string green
     LAMP, // rgb[0] to rgb[1]
     DRUM, // rgb[2] to rgb[3]
     RAID, // rgb[4] to rgb[7]

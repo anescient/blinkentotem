@@ -39,6 +39,7 @@
       Spinner blue_spin;
 
       Fader white_fade;
+      Fader green_fade;
 
       void clearColor();
 
@@ -48,7 +49,6 @@
 
       bool setRed(uint8_t red);
 
-      bool setGreen(uint8_t green);
 
       bool step(uint8_t dt);
 

@@ -57,9 +57,9 @@
 
       void setCPU_R(uint8_t * red);
 
-      void setCPU_G(uint8_t * green);
-
       void setCPU_bluespins(spin_t * spins);
+
+      void setCPU_greenfades(fade_t * fades);
 
       void setCPU_whitefades(fade_t * fades);
 

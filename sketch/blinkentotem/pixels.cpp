@@ -116,14 +116,14 @@ void Pixels::setCPU_R(uint8_t * red) {
     rgbwDirty |= rgbw[i].setRed(red[i]);
 }
 
-void Pixels::setCPU_G(uint8_t * green) {
-  for(int i = 0; i < RGBW_COUNT; i++)
-    rgbwDirty |= rgbw[i].setGreen(green[i]);
-}
-
 void Pixels::setCPU_bluespins(spin_t * spins) {
   for(int i = 0; i < RGBW_COUNT; i++)
     rgbw[i].blue_spin.set(spins[i]);
+}
+
+void Pixels::setCPU_greenfades(fade_t * fades) {
+  for(int i = 0; i < RGBW_COUNT; i++)
+    rgbw[i].green_fade.set(fades[i]);
 }
 
 void Pixels::setCPU_whitefades(fade_t * fades) {

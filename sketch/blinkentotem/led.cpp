@@ -50,6 +50,7 @@ void RGBWLED::clearColor() {
 void RGBWLED::clearEffects() {
   blue_spin.clear();
   white_fade.clear();
+  green_fade.clear();
 }
 
 bool RGBWLED::setRGBW(rgbw_t & rgbw) {
@@ -69,17 +70,11 @@ bool RGBWLED::setRed(uint8_t red) {
   return true;
 }
 
-bool RGBWLED::setGreen(uint8_t green) {
-  if(g == green)
-    return false;
-  g = green;
-  return true;
-}
-
 bool RGBWLED::step(uint8_t dt) {
   bool changed = false;
   changed |= blue_spin.step(dt);
   changed |= white_fade.step(dt);
+  changed |= green_fade.step(dt);
   return changed;
 }
 

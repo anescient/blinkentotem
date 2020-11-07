@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import random
 import time
 
 from blinkentotem import Totem
@@ -62,6 +61,7 @@ class CPUIndicator:
         self._cpuindex = cpuindex
         self._led = totem.rgbw[cpuindex]
         self._bluespin = totem.bluespins[cpuindex]
+        self._greenfade = totem.greenfades[cpuindex]
         self._whitefade = totem.whitefades[cpuindex]
         self._heat = 0
         self._frequency = 0
@@ -79,7 +79,9 @@ class CPUIndicator:
             self._whitefade.pumpvalue = unitToByte((self._heat - 0.8) / 0.2)
             self._whitefade.decayrate = 5
 
-        self._led.g = unitToByte(0.5 * cpuactivity.io ** 2)
+        if cpuactivity.io > 0.05:
+            self._greenfade.pumpvalue = unitToByte(0.5 + 0.5 * cpuactivity.io)
+            self._greenfade.decayrate = 40
 
         if busy > self._frequency:
             self._frequency = 0.8 * self._frequency + 0.2 * busy
