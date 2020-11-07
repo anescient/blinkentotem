@@ -111,21 +111,6 @@ void Pixels::updateRGB(rgb_t * rgbframe, size_t index, size_t count) {
     rgbDirty |= rgb[index + i].setRGB(rgbframe[i]);
 }
 
-void Pixels::setCPU_bluespins(spin_t * spins) {
-  for(int i = 0; i < RGBW_COUNT; i++)
-    rgbw[i].blue_spin.set(spins[i]);
-}
-
-void Pixels::setCPU_greenfades(fade_t * fades) {
-  for(int i = 0; i < RGBW_COUNT; i++)
-    rgbw[i].green_fade.set(fades[i]);
-}
-
-void Pixels::setCPU_whitefades(fade_t * fades) {
-  for(int i = 0; i < RGBW_COUNT; i++)
-    rgbw[i].white_fade.set(fades[i]);
-}
-
 void Pixels::pulseRaid(iopulse_t * pulses) {
   for(int i = 0; i < RAID_COUNT; i++) {
     RGBLED & led = rgb[RAID_OFFSET + i];

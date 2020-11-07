@@ -55,13 +55,6 @@
       void updateRGB(rgb_t * rgbframe, size_t index, size_t count);
 
 
-      void setCPU_bluespins(spin_t * spins);
-
-      void setCPU_greenfades(fade_t * fades);
-
-      void setCPU_whitefades(fade_t * fades);
-
-
       void pulseRaid(iopulse_t * pulses);
 
       void pulseDrum(iopulse_t & pulse);

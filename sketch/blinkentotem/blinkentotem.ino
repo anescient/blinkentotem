@@ -57,15 +57,18 @@ void loop() {
       break;
 
     case CPU_SPIN_B:
-      pixels.setCPU_bluespins(comm.buffer.spins);
+      for(int i = 0; i < RGBW_COUNT; i++)
+        pixels.rgbw[i].blue_spin.set(comm.buffer.spins[i]);
       break;
 
     case CPU_FADE_G:
-      pixels.setCPU_greenfades(comm.buffer.fades);
+      for(int i = 0; i < RGBW_COUNT; i++)
+        pixels.rgbw[i].green_fade.set(comm.buffer.fades[i]);
       break;
 
     case CPU_FADE_W:
-      pixels.setCPU_whitefades(comm.buffer.fades);
+      for(int i = 0; i < RGBW_COUNT; i++)
+        pixels.rgbw[i].white_fade.set(comm.buffer.fades[i]);
       break;
 
     case CPU_GLOW_R:
