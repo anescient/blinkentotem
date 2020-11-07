@@ -69,12 +69,10 @@ void Pixels::setOffline(bool offline) {
 }
 
 void Pixels::step(uint8_t dt) {
-  if(dt != 0) {
-    for(int i = 0; i < RGB_COUNT; i++)
-      rgbDirty |= rgb[i].step(dt);
-    for(int i = 0; i < RGBW_COUNT; i++)
-      rgbwDirty |= rgbw[i].step(dt);
-  }
+  for(int i = 0; i < RGB_COUNT; i++)
+    rgbDirty |= rgb[i].step(dt);
+  for(int i = 0; i < RGBW_COUNT; i++)
+    rgbwDirty |= rgbw[i].step(dt);
   if(rgbDirty)
     showRGB();
   if(rgbwDirty)

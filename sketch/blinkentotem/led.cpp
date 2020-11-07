@@ -24,8 +24,6 @@ bool RGBLED::setRGB(rgb_t & rgb) {
 }
 
 bool RGBLED::step(uint8_t dt) {
-  if(dt == 0)
-    return false;
   bool changed = false;
   changed |= red_fade.step(dt);
   changed |= green_fade.step(dt);
@@ -87,8 +85,6 @@ bool RGBWLED::setGreen(uint8_t green) {
 }
 
 bool RGBWLED::step(uint8_t dt) {
-  if(dt == 0)
-    return false;
   bool changed = false;
   changed |= blue_spin.step(dt);
   changed |= white_fade.step(dt);
