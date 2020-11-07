@@ -113,7 +113,6 @@ class RaidDiskIndicator:
 class DrumIndicator:
     def __init__(self, totem):
         self._ssdDivisor = 800000
-        self._white = 0.5
         self._totem = totem
 
     def update(self, diskactivity):
@@ -124,12 +123,7 @@ class DrumIndicator:
         if written > 0:
             pulse.write = max(4, min(70, written // self._ssdDivisor))
 
-        if read or written:
-            self._white = max(0.3, self._white - 0.06)
-        else:
-            self._white = min(1.0, self._white + 0.02)
-
-        x = min(0.5, self._white)
+        x = 0.5 if read or written else 0.4
         self._totem.drum[0].setrgb(
             unitToByte(x * 0.28),
             unitToByte(x * 0.33),
