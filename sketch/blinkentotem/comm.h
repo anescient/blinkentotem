@@ -17,7 +17,6 @@
     CPU_SPIN_B, // spins on rgbw blue
     CPU_FADE_G, // faders on rgbw green
     CPU_FADE_W, // faders on rgbw white
-    CPU_RED, // 8 bytes, rgbw string red
     LAMP, // rgb[0] to rgb[1]
     DRUM, // rgb[2] to rgb[3]
     RAID, // rgb[4] to rgb[7]

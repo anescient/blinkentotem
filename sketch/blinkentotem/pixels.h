@@ -55,8 +55,6 @@
       void updateRGB(rgb_t * rgbframe, size_t index, size_t count);
 
 
-      void setCPU_R(uint8_t * red);
-
       void setCPU_bluespins(spin_t * spins);
 
       void setCPU_greenfades(fade_t * fades);

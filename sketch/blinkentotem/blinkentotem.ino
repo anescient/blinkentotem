@@ -68,10 +68,6 @@ void loop() {
       pixels.setCPU_whitefades(comm.buffer.fades);
       break;
 
-    case CPU_RED:
-      pixels.setCPU_R(comm.buffer.bytes);
-      break;
-
     case RAID:
       pixels.updateRGB(comm.buffer.rgb, RAID_OFFSET, RAID_COUNT);
       break;

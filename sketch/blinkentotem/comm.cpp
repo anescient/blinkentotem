@@ -49,11 +49,6 @@ datatype_t Comm::receive(int timeoutms) {
         datasize = RGBW_COUNT * sizeof(fade_t);
         break;
 
-      case 'h':
-        datatype = CPU_RED;
-        datasize = RGBW_COUNT;
-        break;
-
       case 'r':
         datatype = RAID;
         datasize = RAID_COUNT * sizeof(rgb_t);

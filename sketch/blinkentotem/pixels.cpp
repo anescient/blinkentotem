@@ -111,11 +111,6 @@ void Pixels::updateRGB(rgb_t * rgbframe, size_t index, size_t count) {
     rgbDirty |= rgb[index + i].setRGB(rgbframe[i]);
 }
 
-void Pixels::setCPU_R(uint8_t * red) {
-  for(int i = 0; i < RGBW_COUNT; i++)
-    rgbwDirty |= rgbw[i].setRed(red[i]);
-}
-
 void Pixels::setCPU_bluespins(spin_t * spins) {
   for(int i = 0; i < RGBW_COUNT; i++)
     rgbw[i].blue_spin.set(spins[i]);
