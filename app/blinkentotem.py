@@ -132,7 +132,7 @@ class Totem:
         self._ep = namedtuple(
             'Endpoints',
             'rgb rgbw \
-            bluespins greenfades whitefades red white \
+            bluespins greenfades whitefades red \
             raid drum lamps raidpulse drumpulse')
         self._ep.rgb = self._Endpoint('1')
         self._ep.rgbw = self._Endpoint('2')
@@ -140,7 +140,6 @@ class Totem:
         self._ep.greenfades = self._PulseEndpoint('i')
         self._ep.whitefades = self._PulseEndpoint('z')
         self._ep.red = self._Endpoint('h')
-        self._ep.white = self._Endpoint('w')
         self._ep.raid = self._Endpoint('r')
         self._ep.drum = self._Endpoint('d')
         self._ep.lamps = self._Endpoint('l')
@@ -180,16 +179,19 @@ class Totem:
         self._ep.bluespins.update(self.bluespins)
         self._ep.greenfades.update(self.greenfades)
         self._ep.whitefades.update(self.whitefades)
+
         self._ep.red.updateRaw([rgbw.r for rgbw in self.rgbw])
-        self._ep.white.updateRaw([rgbw.w for rgbw in self.rgbw])
+
         self._ep.raid.update(self.raid)
         self._ep.drum.update(self.drum)
         self._ep.lamps.update(self.lamps)
+
         self._ep.raidpulse.update(self.raidpulse)
         self._ep.drumpulse.update([self.drumpulse])
         updated = False
-        for ep in [self._ep.bluespins, self._ep.greenfades, self._ep.whitefades,
-                   self._ep.red, self._ep.white,
+        for ep in [self._ep.bluespins,
+                   self._ep.greenfades, self._ep.whitefades,
+                   self._ep.red,
                    self._ep.raid, self._ep.drum, self._ep.lamps,
                    self._ep.raidpulse, self._ep.drumpulse]:
             if ep.dirty or force:
