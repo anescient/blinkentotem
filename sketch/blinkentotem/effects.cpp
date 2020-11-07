@@ -27,8 +27,8 @@ bool Spinner::step(uint8_t dt) {
   return true;
 }
 
-bool Spinner::active() {
-  return frequency != 0;
+uint8_t Spinner::lighten(uint8_t minimum) {
+  return frequency == 0 ? minimum : max(minimum, outvalue);
 }
 
 void Spinner::clear() {
@@ -61,21 +61,17 @@ bool Fader::step(uint8_t dt) {
   return false;
 }
 
-bool Fader::active() {
-  return value.whole != 0;
+uint8_t Fader::lighten(uint8_t minimum) {
+  return value.whole == 0 ? minimum : max(minimum, outvalue);
 }
 
 void Fader::clear() {
   value.whole = 0;
 }
 
-void Flash::set(uint8_t t) {
-  timer = t;
-}
-
-void Flash::update(uint8_t t_min) {
-  if(t_min > timer)
-    timer = t_min;
+void Flash::set(uint8_t time, uint8_t brightness) {
+  timer = time;
+  outvalue = brightness;
 }
 
 bool Flash::step(uint8_t dt) {
@@ -88,8 +84,8 @@ bool Flash::step(uint8_t dt) {
   return false;
 }
 
-bool Flash::active() {
-  return timer != 0;
+uint8_t Flash::lighten(uint8_t minimum) {
+  return timer == 0 ? minimum : max(minimum, outvalue);
 }
 
 void Flash::clear() {

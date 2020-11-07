@@ -11,15 +11,15 @@
       uint8_t frequency = 0;
       uint8_t v_min = 0;
       uint8_t v_max = 0;
+      uint8_t outvalue = 0;
 
     public:
-      uint8_t outvalue = 0;
 
       void set(spin_t & spin);
 
       bool step(uint8_t dt);
 
-      bool active();
+      uint8_t lighten(uint8_t minimum);
 
       void clear();
   };
@@ -34,15 +34,15 @@
         };
       } value;
       uint16_t decayrate;
+      uint8_t outvalue = 0;
 
     public:
-      uint8_t outvalue = 0;
 
       void set(fade_t & fade);
 
       bool step(uint8_t dt);
 
-      bool active();
+      uint8_t lighten(uint8_t minimum);
 
       void clear();
   };
@@ -50,17 +50,15 @@
   class Flash {
     private:
       uint8_t timer = 0;
+      uint8_t outvalue = 0;
 
     public:
-      uint8_t brightness = 0;
 
-      void set(uint8_t t);
-
-      void update(uint8_t t_min);
+      void set(uint8_t time, uint8_t brightness);
 
       bool step(uint8_t dt);
 
-      bool active();
+      uint8_t lighten(uint8_t minimum);
 
       void clear();
   };

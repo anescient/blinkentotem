@@ -134,10 +134,8 @@ void Pixels::setCPU_whitefades(fade_t * fades) {
 void Pixels::pulseRaid(iopulse_t * pulses) {
   for(int i = 0; i < RAID_COUNT; i++) {
     RGBLED & led = rgb[RAID_OFFSET + i];
-    led.red_flash.brightness = raidRed;
-    led.red_flash.update(pulses[i].write);
-    led.green_flash.brightness = raidGreen;
-    led.green_flash.update(pulses[i].read);
+    led.red_flash.set(pulses[i].write, raidRed);
+    led.green_flash.set(pulses[i].read, raidGreen);
   }
   rgbDirty = true;
 }
@@ -146,9 +144,7 @@ void Pixels::pulseDrum(iopulse_t & pulse) {
   RGBLED & led_a = rgb[DRUM_OFFSET + drumFlip];
   drumFlip = 1 - drumFlip;
   RGBLED & led_b = rgb[DRUM_OFFSET + drumFlip];
-  led_a.green_flash.brightness = drumGreen;
-  led_a.green_flash.update(pulse.read);
-  led_b.red_flash.brightness = drumRed;
-  led_b.red_flash.update(pulse.write);
+  led_a.green_flash.set(pulse.read, drumGreen);
+  led_b.red_flash.set(pulse.write, drumRed);
   rgbDirty = true;
 }

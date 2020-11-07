@@ -33,17 +33,9 @@ bool RGBLED::step(uint8_t dt) {
 }
 
 void RGBLED::renderTo(Adafruit_NeoPixel & rgbPix, int index) {
-  uint8_t rr = r;
-  uint8_t gg = g;
-  if(red_fade.active())
-    rr = max(rr, red_fade.outvalue);
-  if(green_fade.active())
-    gg = max(gg, green_fade.outvalue);
-  if(red_flash.active())
-    rr = max(rr, red_flash.brightness);
-  if(green_flash.active())
-    gg = max(gg, green_flash.brightness);
-  rgbPix.setPixelColor(index, rr, gg, b);
+  rgbPix.setPixelColor(index,
+    red_fade.lighten(red_flash.lighten(r)),
+    green_fade.lighten(green_flash.lighten(g)), b);
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -92,11 +84,8 @@ bool RGBWLED::step(uint8_t dt) {
 }
 
 void RGBWLED::renderTo(Adafruit_NeoPixel & rgbwPix, int index) {
-  uint8_t bb = b;
-  uint8_t ww = w;
-  if(blue_spin.active())
-    bb = max(bb, blue_spin.outvalue);
-  if(white_fade.active())
-    ww = max(ww, white_fade.outvalue);
-  rgbwPix.setPixelColor(index, g, r, bb, ww);
+  rgbwPix.setPixelColor(index,
+    green_fade.lighten(g), r,
+    blue_spin.lighten(b),
+    white_fade.lighten(w));
 }
