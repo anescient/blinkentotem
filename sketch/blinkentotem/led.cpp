@@ -2,9 +2,7 @@
 #include "led.h"
 
 void RGBLED::clearColor() {
-  r = 0;
-  g = 0;
-  b = 0;
+  memset(&color, 0, sizeof(rgb_t));
 }
 
 void RGBLED::clearEffects() {
@@ -15,11 +13,9 @@ void RGBLED::clearEffects() {
 }
 
 bool RGBLED::setRGB(rgb_t & rgb) {
-  if(rgb.r == r && rgb.g == g && rgb.b == b)
+  if(memcmp(&color, &rgb, sizeof(rgb_t)) == 0)
     return false;
-  r = rgb.r;
-  g = rgb.g;
-  b = rgb.b;
+  color = rgb;
   return true;
 }
 
@@ -34,17 +30,15 @@ bool RGBLED::step(uint8_t dt) {
 
 void RGBLED::renderTo(Adafruit_NeoPixel & rgbPix, int index) {
   rgbPix.setPixelColor(index,
-    red_fade.lighten(red_flash.lighten(r)),
-    green_fade.lighten(green_flash.lighten(g)), b);
+    red_fade.lighten(red_flash.lighten(color.r)),
+    green_fade.lighten(green_flash.lighten(color.g)),
+    color.b);
 }
 
 ////////////////////////////////////////////////////////////////////
 
 void RGBWLED::clearColor() {
-  r = 0;
-  g = 0;
-  b = 0;
-  w = 0;
+  memset(&color, 0, sizeof(rgbw_t));
 }
 
 void RGBWLED::clearEffects() {
@@ -55,12 +49,9 @@ void RGBWLED::clearEffects() {
 }
 
 bool RGBWLED::setRGBW(rgbw_t & rgbw) {
-  if(rgbw.r == r && rgbw.g == g && rgbw.b == b && rgbw.w == w)
+  if(memcmp(&color, &rgbw, sizeof(rgbw_t)) == 0)
     return false;
-  r = rgbw.r;
-  g = rgbw.g;
-  b = rgbw.b;
-  w = rgbw.w;
+  color = rgbw;
   return true;
 }
 
@@ -75,8 +66,8 @@ bool RGBWLED::step(uint8_t dt) {
 
 void RGBWLED::renderTo(Adafruit_NeoPixel & rgbwPix, int index) {
   rgbwPix.setPixelColor(index,
-    green_fade.lighten(g),
-    red_glow.lighten(r),
-    blue_spin.lighten(b),
-    white_fade.lighten(w));
+    green_fade.lighten(color.g),
+    red_glow.lighten(color.r),
+    blue_spin.lighten(color.b),
+    white_fade.lighten(color.w));
 }

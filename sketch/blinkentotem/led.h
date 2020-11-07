@@ -8,9 +8,7 @@
 
   class RGBLED {
     public:
-      uint8_t r = 0;
-      uint8_t g = 0;
-      uint8_t b = 0;
+      rgb_t color;
 
       Fader red_fade;
       Fader green_fade;
@@ -31,10 +29,7 @@
 
   class RGBWLED {
     public:
-      uint8_t r = 0;
-      uint8_t g = 0;
-      uint8_t b = 0;
-      uint8_t w = 0;
+      rgbw_t color;
 
       Spinner blue_spin;
 
