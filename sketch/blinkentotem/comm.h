@@ -12,6 +12,7 @@
     NONE, // timeout or error or whatever
     PING, // watchdog reset
     FLUSH, // update led strings immediately
+    CLEAR, // clear all colors and effects
     CONFIG,
     RGBFRAME, // entire rgb string
     RGBWFRAME, // entire rgbw string

@@ -137,6 +137,7 @@ class DrumIndicator:
 
 def main():
     totem = Totem()
+    totem.clear()
     totem.config.raidRed = 30
     totem.config.raidGreen = 100
     totem.config.drumRed = 150

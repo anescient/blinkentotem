@@ -6,73 +6,97 @@ import time
 from blinkentotem import Totem
 
 
-def rgbw_flashycounters():
-    totem = Totem()
-    frame = 0
-    while True:
-        frame += 1
+class _Demo:
+    def __init__(self, totem):
+        self.totem = totem
+        self.framecount = 0
 
-        for led in totem.rgbw:
+    def step(self):
+        self.framecount += 1
+
+
+class FlashyCounters(_Demo):
+    def __init__(self, totem):
+        super().__init__(totem)
+
+    def step(self):
+        super().step()
+        for led in self.totem.rgbw:
             led.clear()
         for i in range(8):
-            do_b = (frame % 0xff) & (1 << i) != 0
-            do_r = ((frame // 3 + 73) % 0xff) & (1 << i) != 0
+            do_b = (self.framecount % 0xff) & (1 << i) != 0
+            do_r = ((self.framecount // 3 + 73) % 0xff) & (1 << i) != 0
             if do_b:
-                totem.rgbw[7 - i].b = 40
+                self.totem.rgbw[7 - i].b = 40
             if do_r:
-                totem.rgbw[i].r = 100
-        for led in totem.rgbw:
+                self.totem.rgbw[i].r = 100
+        for led in self.totem.rgbw:
             if led.b and led.r and random() < 0.1:
                 led.w = 250
-        totem.rgbw[randint(0, 7)].g = 250
-        totem.pushPieces()
+        self.totem.rgbw[randint(0, 7)].g = 250
+        self.totem.pushPieces()
+        self.totem.flush()
+        time.sleep(0.01)
+
+
+class RandomMess(_Demo):
+    def __init__(self, totem):
+        super().__init__(totem)
+
+    @staticmethod
+    def _random_x():
+        return 0 if random() < 0.7 else randint(0, 255)
+
+    def step(self):
+        super().step()
+        led = randomchoice(self.totem.rgb)
+        led.r = self._random_x()
+        led.g = self._random_x()
+        led.b = self._random_x()
+
+        led = randomchoice(self.totem.rgbw)
+        led.r = self._random_x()
+        led.g = self._random_x()
+        led.b = self._random_x()
+        led.w = self._random_x()
+
+        self.totem.pushPieces()
 
         time.sleep(0.01)
 
 
-def randommess_x():
-    return 0 if random() < 0.7 else randint(0, 255)
+class Chasers(_Demo):
+    def __init__(self, totem):
+        super().__init__(totem)
+        self._leds = totem.rgb + totem.rgbw
+        self.redi = 0
+        self.bluei = 0
+        self.greeni = 0
 
-
-def randommess():
-    totem = Totem()
-    while True:
-        led = randomchoice(totem.rgb)
-        led.r = randommess_x()
-        led.g = randommess_x()
-        led.b = randommess_x()
-
-        led = randomchoice(totem.rgbw)
-        led.r = randommess_x()
-        led.g = randommess_x()
-        led.b = randommess_x()
-        led.w = randommess_x()
-
-        totem.pushPieces()
-
-        time.sleep(0.01)
-
-
-def sequential():
-    totem = Totem()
-    leds = totem.rgb + totem.rgbw
-    redi = 0
-    bluei = 0
-    greeni = 0
-    while True:
-        for led in leds:
+    def step(self):
+        super().step()
+        for led in self._leds:
             led.clear()
-        leds[redi].r = 255
-        leds[bluei].b = 200
-        leds[greeni].g = 200
-        redi = (redi + 1) % len(leds)
+        self._leds[self.redi].r = 255
+        self._leds[self.bluei].b = 200
+        self._leds[self.greeni].g = 200
+        self.redi = (self.redi + 1) % len(self._leds)
         if random() < 0.5:
-            bluei = (bluei + 1) % len(leds)
+            self.bluei = (self.bluei + 1) % len(self._leds)
         if random() < 0.1:
-            greeni = (greeni + 1) % len(leds)
+            self.greeni = (self.greeni + 1) % len(self._leds)
         totem.pushPieces()
         totem.flush()
 
 
 if __name__ == '__main__':
-    sequential()
+    totem = Totem()
+    demos = [FlashyCounters(totem),
+             RandomMess(totem),
+             Chasers(totem)]
+    while True:
+        for demo in demos:
+            totem.clear()
+            endtime = time.monotonic() + 4
+            while time.monotonic() < endtime:
+                demo.step()

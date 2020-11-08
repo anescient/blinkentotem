@@ -48,6 +48,11 @@ void loop() {
       pixels.show();
       break;
 
+    case CLEAR:
+      pixels.clearColors();
+      pixels.clearEffects();
+      break;
+
     case CONFIG:
       pixels.setConfig(comm.buffer.config);
       break;

@@ -23,6 +23,10 @@ datatype_t Comm::receive(int timeoutms) {
         datatype = FLUSH;
         break;
 
+      case 'c':
+        datatype = CLEAR;
+        break;
+
       case 'p':
         datatype = CONFIG;
         datasize = sizeof(config_t);

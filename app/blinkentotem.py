@@ -174,6 +174,10 @@ class Totem:
         self._serial.write([self._leadin, ord(' '), 0])
         self._serial.flush()
 
+    def clear(self):
+        self._serial.write([self._leadin, ord('c'), 0])
+        self._serial.flush()
+
     def flush(self):
         self._serial.write([self._leadin, ord(';'), 0])
         self._serial.flush()
