@@ -44,6 +44,10 @@ void loop() {
     case PING:
       break;
 
+    case FLUSH:
+      pixels.show();
+      break;
+
     case CONFIG:
       pixels.setConfig(comm.buffer.config);
       break;

@@ -79,6 +79,11 @@ void Pixels::step(uint8_t dt) {
     showRGBW();
 }
 
+void Pixels::show() {
+  showRGB();
+  showRGBW();
+}
+
 void Pixels::clearColors() {
   for(int i = 0; i < RGB_COUNT; i++)
     rgb[i].clearColor();

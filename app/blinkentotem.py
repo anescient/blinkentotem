@@ -49,6 +49,9 @@ class Totem:
             self.b = 0
             self.w = 0
 
+        def clear(self):
+            self.r = self.g = self.b = self.w = 0
+
         def getPayload(self):
             return [self.r, self.g, self.b, self.w]
 
@@ -57,6 +60,9 @@ class Totem:
             self.r = 0
             self.g = 0
             self.b = 0
+
+        def clear(self):
+            self.r = self.g = self.b = 0
 
         def setrgb(self, r, g, b):
             self.r, self.g, self.b = r, g, b
@@ -166,6 +172,10 @@ class Totem:
     # WDT reset
     def ping(self):
         self._serial.write([self._leadin, ord(' '), 0])
+        self._serial.flush()
+
+    def flush(self):
+        self._serial.write([self._leadin, ord(';'), 0])
         self._serial.flush()
 
     def pushConfig(self):

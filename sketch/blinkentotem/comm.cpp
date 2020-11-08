@@ -19,6 +19,10 @@ datatype_t Comm::receive(int timeoutms) {
         datatype = PING;
         break;
 
+      case ';':
+        datatype = FLUSH;
+        break;
+
       case 'p':
         datatype = CONFIG;
         datasize = sizeof(config_t);

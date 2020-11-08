@@ -11,6 +11,7 @@
   enum datatype_t {
     NONE, // timeout or error or whatever
     PING, // watchdog reset
+    FLUSH, // update led strings immediately
     CONFIG,
     RGBFRAME, // entire rgb string
     RGBWFRAME, // entire rgbw string

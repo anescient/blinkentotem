@@ -43,6 +43,8 @@
 
       void step(uint8_t dt);
 
+      void show();
+
 
       void clearColors();
 
