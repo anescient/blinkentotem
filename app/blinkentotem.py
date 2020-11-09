@@ -5,6 +5,13 @@ import time
 import serial
 
 
+
+def unitToByte(x):
+    if x <= 0:
+        return 0
+    return max(1, min(255, int(256.0 * x)))
+
+
 class Totem:
 
     _leadin = ord('$')

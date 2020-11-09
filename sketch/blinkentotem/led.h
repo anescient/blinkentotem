@@ -46,7 +46,6 @@
 
       bool setRed(uint8_t red);
 
-
       bool step(uint8_t dt);
 
       void renderTo(Adafruit_NeoPixel & rgbwPix, int index);

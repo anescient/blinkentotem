@@ -2,60 +2,11 @@
 
 import time
 
-from blinkentotem import Totem
+from blinkentotem import Totem, unitToByte
 from superps import SystemActivity
 
 
-# mapping [0.0, 1.0] to [0.0, 1.0]
-class UnitCurve:
-
-    class _Point:
-        def __init__(self, x, y):
-            self.x = float(x)
-            self.y = float(y)
-
-    def __init__(self):
-        self.points = []
-
-    def addPoint(self, x, fofx):
-        self.points.append(self._Point(x, fofx))
-        self.points.sort(key=lambda p: p.x)
-
-    def sample(self, x):
-        assert len(self.points) >= 2
-        if x <= self.points[0].x:
-            return int(self.points[0].y)
-        if x >= self.points[-1].x:
-            return int(self.points[-1].y)
-
-        lowpoint = self.points[0]
-        highpoint = None
-        for point in self.points[1:]:
-            if point.x > x:
-                highpoint = point
-                break
-            lowpoint = point
-        assert lowpoint.x <= x < highpoint.x
-
-        segment = (x - lowpoint.x) / (highpoint.x - lowpoint.x)
-        assert 0.0 <= segment <= 1.0
-        y = (1.0 - segment) * lowpoint.y + segment * highpoint.y
-        return max(0.0, min(1.0, y))
-
-
-def unitToByte(x):
-    if x <= 0:
-        return 0
-    return max(1, min(255, int(256.0 * x)))
-
-
 class CPUIndicator:
-
-    _heatcurve = UnitCurve()
-    _heatcurve.addPoint(0.0, 0.01)
-    _heatcurve.addPoint(0.2, 0.05)
-    _heatcurve.addPoint(0.8, 0.25)
-    _heatcurve.addPoint(1.0, 1.0)
 
     def __init__(self, cpuindex, totem):
         self._cpuindex = cpuindex
@@ -75,7 +26,12 @@ class CPUIndicator:
             self._heat += 0.02 * (busy - self._heat)
         if busy < 0.2:
             self._heat *= 0.97 + 0.03 * (busy / 0.2)
-        self._redglow.targetvalue = unitToByte(self._heatcurve.sample(self._heat))
+
+        redglow = 0.01 + (self._heat / 0.8) * 0.25
+        if self._heat > 0.8:
+            redglow = 0.25 + (self._heat - 0.8) / 0.2 * 0.75
+        self._redglow.targetvalue = unitToByte(redglow)
+
         if self._heat > 0.8:
             self._whitefade.pumpvalue = unitToByte((self._heat - 0.8) / 0.2)
             self._whitefade.decayrate = 5

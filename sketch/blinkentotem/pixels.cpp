@@ -45,8 +45,7 @@ void Pixels::begin() {
 
   clearColors();
   clearEffects();
-  showRGB();
-  showRGBW();
+  show();
 }
 
 void Pixels::setConfig(config_t & config) {
@@ -63,8 +62,7 @@ void Pixels::setOffline(bool offline) {
     if(offline) {
       clearEffects();
     }
-    showRGB();
-    showRGBW();
+    show();
   }
 }
 
