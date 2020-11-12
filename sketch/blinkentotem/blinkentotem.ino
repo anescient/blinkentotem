@@ -65,32 +65,32 @@ void loop() {
       pixels.setRGBW(comm.buffer.rgbw);
       break;
 
-    case CPU_SPIN_B:
+    case RGBW_FADE_R:
       for(int i = 0; i < RGBW_COUNT; i++)
-        pixels.rgbw[i].blue_spin.set(comm.buffer.spins[i]);
+        pixels.rgbw[i].red_fade.set(comm.buffer.fades[i]);
       break;
 
-    case CPU_FADE_G:
+    case RGBW_FADE_G:
       for(int i = 0; i < RGBW_COUNT; i++)
         pixels.rgbw[i].green_fade.set(comm.buffer.fades[i]);
       break;
 
-    case CPU_FADE_W:
+    case RGBW_SPIN_B:
+      for(int i = 0; i < RGBW_COUNT; i++)
+        pixels.rgbw[i].blue_spin.set(comm.buffer.spins[i]);
+      break;
+
+    case RGBW_FADE_W:
       for(int i = 0; i < RGBW_COUNT; i++)
         pixels.rgbw[i].white_fade.set(comm.buffer.fades[i]);
       break;
 
-    case CPU_GLOW_R:
-      for(int i = 0; i < RGBW_COUNT; i++)
-        pixels.rgbw[i].red_glow.setTarget(comm.buffer.bytes[i]);
+    case DRUM:
+      pixels.updateRGB(comm.buffer.rgb, DRUM_OFFSET, DRUM_COUNT);
       break;
 
     case RAID:
       pixels.updateRGB(comm.buffer.rgb, RAID_OFFSET, RAID_COUNT);
-      break;
-
-    case DRUM:
-      pixels.updateRGB(comm.buffer.rgb, DRUM_OFFSET, DRUM_COUNT);
       break;
 
     case LAMP:

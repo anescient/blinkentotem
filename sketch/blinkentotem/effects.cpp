@@ -39,35 +39,66 @@ void Spinner::clear() {
   outvalue = 0;
 }
 
+//////////////////////////////////////////////////
+
+bool Fader::enabled() {
+  return uprate != 0 || downrate != 0;
+}
+
 void Fader::set(fade_t & fade) {
-  if(fade.value > value.high)
-    value.high = fade.value;
-  decayrate = 4 * fade.decayrate;
+  targetvalue = fade.targetvalue;
+  uprate = fade.uprate;
+  downrate = fade.downrate;
+}
+
+void Fader::updateTarget(uint8_t value) {
+  targetvalue = value;
 }
 
 bool Fader::step(uint8_t dt) {
-  if(outvalue == 0 && value.whole == 0)
+  if(value.high == targetvalue || !enabled())
     return false;
-  uint16_t delta = dt * decayrate;
-  if(value.whole < delta)
-    value.whole = 0;
-  else
-    value.whole -= delta;
-  uint8_t v = Adafruit_NeoPixel::gamma8(value.high);
-  if(v != outvalue) {
-    outvalue = v;
-    return true;
+  timeaccumulator += dt;
+  uint8_t timedivide = 100;
+  if(timeaccumulator < timedivide)
+    return false;
+  dt = timedivide;
+  timeaccumulator -= dt;
+
+  uint8_t oldhigh = value.high;
+
+  if(value.high > targetvalue) {
+    if(downrate == 0xff)
+      value.high = targetvalue;
+    else {
+      uint16_t tick = (uint16_t)dt * downrate;
+      value.whole = value.whole > tick ? value.whole - tick : 0;
+    }
   }
-  return false;
+
+  if(value.high < targetvalue) {
+    if(uprate == 0xff)
+      value.high = targetvalue;
+    else {
+      uint16_t tick = (uint16_t)dt * uprate;
+      value.whole = value.whole < (0xffff - tick) ? value.whole + tick : 0xffff;
+    }
+  }
+
+  return value.high != oldhigh;
 }
 
 uint8_t Fader::lighten(uint8_t minimum) {
-  return value.whole == 0 ? minimum : max(minimum, outvalue);
+  return enabled() ? max(minimum, Adafruit_NeoPixel::gamma8(value.high)) : minimum;
 }
 
 void Fader::clear() {
   value.whole = 0;
+  uprate = 0;
+  downrate = 0;
 }
+
+//////////////////////////////////////////////////
 
 void Flash::set(uint8_t time, uint8_t brightness) {
   timer = time;
@@ -90,31 +121,4 @@ uint8_t Flash::lighten(uint8_t minimum) {
 
 void Flash::clear() {
   timer = 0;
-}
-
-void SlowGlow::setTarget(uint8_t value) {
-  targetvalue = value;
-}
-
-bool SlowGlow::step(uint8_t dt) {
-  if(outvalue == targetvalue)
-    return false;
-  timeaccumulator += dt;
-  if(timeaccumulator > ticklength) {
-    timeaccumulator -= ticklength;
-    if(outvalue > targetvalue)
-      outvalue--;
-    else
-      outvalue++;
-  }
-  return true;
-}
-
-uint8_t SlowGlow::lighten(uint8_t minimum) {
-  return max(minimum, outvalue);
-}
-
-void SlowGlow::clear() {
-  outvalue = 0;
-  targetvalue = 0;
 }

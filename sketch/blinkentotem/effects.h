@@ -24,6 +24,8 @@
       void clear();
   };
 
+  //////////////////////////////////////////////////
+
   class Fader {
     private:
       union {
@@ -33,12 +35,18 @@
           uint8_t high;
         };
       } value;
-      uint16_t decayrate;
-      uint8_t outvalue = 0;
+      uint8_t timeaccumulator = 0;
+      uint8_t uprate = 0;
+      uint8_t downrate = 0;
+      uint8_t targetvalue = 0;
+
+      bool enabled();
 
     public:
 
       void set(fade_t & fade);
+
+      void updateTarget(uint8_t value);
 
       bool step(uint8_t dt);
 
@@ -46,6 +54,8 @@
 
       void clear();
   };
+
+  //////////////////////////////////////////////////
 
   class Flash {
     private:
@@ -55,24 +65,6 @@
     public:
 
       void set(uint8_t time, uint8_t brightness);
-
-      bool step(uint8_t dt);
-
-      uint8_t lighten(uint8_t minimum);
-
-      void clear();
-  };
-
-  class SlowGlow {
-    private:
-      uint16_t timeaccumulator = 0;
-      uint16_t ticklength = 100;
-      uint8_t outvalue = 0;
-      uint8_t targetvalue = 0;
-
-    public:
-
-      void setTarget(uint8_t value);
 
       bool step(uint8_t dt);
 

@@ -37,39 +37,14 @@ datatype_t Comm::receive(int timeoutms) {
         datasize = RGB_COUNT * sizeof(rgb_t);
         break;
 
-      case '2':
-        datatype = RGBWFRAME;
-        datasize = RGBW_COUNT * sizeof(rgbw_t);
-        break;
-
-      case 's':
-        datatype = CPU_SPIN_B;
-        datasize = RGBW_COUNT * sizeof(spin_t);
-        break;
-
-      case 'i':
-        datatype = CPU_FADE_G;
-        datasize = RGBW_COUNT * sizeof(fade_t);
-        break;
-
-      case 'z':
-        datatype = CPU_FADE_W;
-        datasize = RGBW_COUNT * sizeof(fade_t);
-        break;
-
-      case 'g':
-        datatype = CPU_GLOW_R;
-        datasize = RGBW_COUNT;
+      case 'd':
+        datatype = DRUM;
+        datasize = DRUM_COUNT * sizeof(rgb_t);
         break;
 
       case 'r':
         datatype = RAID;
         datasize = RAID_COUNT * sizeof(rgb_t);
-        break;
-
-      case 'd':
-        datatype = DRUM;
-        datasize = DRUM_COUNT * sizeof(rgb_t);
         break;
 
       case 'l':
@@ -85,6 +60,31 @@ datatype_t Comm::receive(int timeoutms) {
       case 'm':
         datatype = DRUMFLASH;
         datasize = sizeof(iopulse_t);
+        break;
+
+      case '2':
+        datatype = RGBWFRAME;
+        datasize = RGBW_COUNT * sizeof(rgbw_t);
+        break;
+
+      case 'g':
+        datatype = RGBW_FADE_R;
+        datasize = RGBW_COUNT * sizeof(fade_t);
+        break;
+
+      case 'i':
+        datatype = RGBW_FADE_G;
+        datasize = RGBW_COUNT * sizeof(fade_t);
+        break;
+
+      case 's':
+        datatype = RGBW_SPIN_B;
+        datasize = RGBW_COUNT * sizeof(spin_t);
+        break;
+
+      case 'z':
+        datatype = RGBW_FADE_W;
+        datasize = RGBW_COUNT * sizeof(fade_t);
         break;
     }
 

@@ -5,7 +5,6 @@ import time
 import serial
 
 
-
 def unitToByte(x):
     if x <= 0:
         return 0
@@ -52,9 +51,13 @@ class Totem:
     class RGBWled:
         def __init__(self):
             self.r = 0
+            self.r_fade = Totem.Fader()
             self.g = 0
+            self.g_fade = Totem.Fader()
             self.b = 0
+            self.b_spin = Totem.Spinner()
             self.w = 0
+            self.w_fade = Totem.Fader()
 
         def clear(self):
             self.r = self.g = self.b = self.w = 0
@@ -65,7 +68,9 @@ class Totem:
     class RGBled:
         def __init__(self):
             self.r = 0
+            self.r_fade = Totem.Fader()
             self.g = 0
+            self.g_fade = Totem.Fader()
             self.b = 0
 
         def clear(self):
@@ -85,26 +90,16 @@ class Totem:
         def getPayload(self):
             return [self.frequency, self.brightness]
 
-    class SlowGlow:
-        def __init__(self):
-            self.targetvalue = 0
-
-        def getPayload(self):
-            return [self.targetvalue]
-
     class Fader:
         def __init__(self):
-            self.pumpvalue = 0
-            self.decayrate = 0
-
-        def nonzero(self):
-            return self.pumpvalue > 0
-
-        def clear(self):
-            self.pumpvalue = 0
+            self.targetvalue = 0
+            self.uprate = 10
+            self.downrate = 10
 
         def getPayload(self):
-            return [self.pumpvalue, self.decayrate]
+            return [self.targetvalue,
+                    self.uprate,
+                    self.downrate]
 
     class IOPulse:
         def __init__(self):
@@ -138,11 +133,23 @@ class Totem:
     def __init__(self, serialport='/dev/ttyUSB0'):
         self._serial = serial.Serial(serialport, 56000)
         self.config = self.Configuration()
+
         self.rgbw = [self.RGBWled() for _ in range(8)]
-        self.bluespins = [self.Spinner() for _ in self.rgbw]
-        self.greenfades = [self.Fader() for _ in self.rgbw]
-        self.whitefades = [self.Fader() for _ in self.rgbw]
-        self.redglows = [self.SlowGlow() for _ in self.rgbw]
+        self._r_fades = [led.r_fade for led in self.rgbw]
+        self._g_fades = [led.g_fade for led in self.rgbw]
+        self._b_spins = [led.b_spin for led in self.rgbw]
+        self._w_fades = [led.w_fade for led in self.rgbw]
+
+        for fade in self._g_fades:
+            fade.uprate = 255
+            fade.downrate = 50
+        for fade in self._r_fades:
+            fade.uprate = 10
+            fade.downrate = 2
+        for fade in self._w_fades:
+            fade.uprate = 5
+            fade.downrate = 20
+
         self.rgb = [self.RGBled() for _ in range(8)]
         self.raid = self.rgb[4:8]
         self.drum = self.rgb[2:4]
@@ -153,24 +160,30 @@ class Totem:
         self._ep = namedtuple(
             'Endpoints',
             'rgb rgbw \
-            bluespins greenfades whitefades redglows \
+            r_fades g_fades b_spins w_fades \
             raid drum lamps raidpulse drumpulse')
         self._ep.rgb = self._Endpoint('1')
         self._ep.rgbw = self._Endpoint('2')
-        self._ep.bluespins = self._Endpoint('s')
-        self._ep.greenfades = self._PulseEndpoint('i')
-        self._ep.whitefades = self._PulseEndpoint('z')
-        self._ep.redglows = self._Endpoint('g')
+        self._ep.r_fades = self._Endpoint('g')
+        self._ep.g_fades = self._Endpoint('i')
+        self._ep.b_spins = self._Endpoint('s')
+        self._ep.w_fades = self._Endpoint('z')
         self._ep.raid = self._Endpoint('r')
         self._ep.drum = self._Endpoint('d')
         self._ep.lamps = self._Endpoint('l')
         self._ep.raidpulse = self._PulseEndpoint('f')
         self._ep.drumpulse = self._PulseEndpoint('m')
 
+        self._pushEndpoints = [
+            self._ep.r_fades, self._ep.g_fades, self._ep.b_spins,
+            self._ep.w_fades, self._ep.rgbw,
+            self._ep.raid, self._ep.drum, self._ep.lamps,
+            self._ep.raidpulse, self._ep.drumpulse]
+
         # arduino resets when comms begin
         # gotta wait for the bootloader to timeout and run the rom
         self.ping()
-        time.sleep(0.4)
+        time.sleep(0.5)
         self.pushFrames(True)
 
     def __del__(self):
@@ -205,10 +218,10 @@ class Totem:
         return updated
 
     def pushPieces(self, force=False):
-        self._ep.bluespins.update(self.bluespins)
-        self._ep.greenfades.update(self.greenfades)
-        self._ep.whitefades.update(self.whitefades)
-        self._ep.redglows.update(self.redglows)
+        self._ep.r_fades.update(self._r_fades)
+        self._ep.g_fades.update(self._g_fades)
+        self._ep.b_spins.update(self._b_spins)
+        self._ep.w_fades.update(self._w_fades)
 
         self._ep.rgbw.update(self.rgbw)
 
@@ -219,11 +232,7 @@ class Totem:
         self._ep.raidpulse.update(self.raidpulse)
         self._ep.drumpulse.update([self.drumpulse])
         updated = False
-        for ep in [self._ep.bluespins,
-                   self._ep.greenfades, self._ep.whitefades, self._ep.redglows,
-                   self._ep.rgbw,
-                   self._ep.raid, self._ep.drum, self._ep.lamps,
-                   self._ep.raidpulse, self._ep.drumpulse]:
+        for ep in self._pushEndpoints:
             if ep.dirty or force:
                 ep.write(self._serial)
                 self._serial.flush()

@@ -89,14 +89,36 @@ class Chasers(_Demo):
         totem.flush()
 
 
+class FadeTest(_Demo):
+    def __init__(self, totem):
+        super().__init__(totem)
+        self._fades = [led.r_fade for led in totem.rgbw]
+        for fade in self._fades:
+            fade.uprate = 100
+            fade.downrate = 100
+
+    def step(self):
+        super().step()
+        for fade in self._fades:
+            fade.targetvalue = randint(0, 200)
+        totem.pushPieces()
+        totem.flush()
+        time.sleep(0.7)
+
+
 if __name__ == '__main__':
     totem = Totem()
     demos = [FlashyCounters(totem),
              RandomMess(totem),
-             Chasers(totem)]
+             Chasers(totem),
+             FadeTest(totem)]
+
+    demos = [FadeTest(totem)]
+
     while True:
         for demo in demos:
-            totem.clear()
+            if len(demos) > 1:
+                totem.clear()
             endtime = time.monotonic() + 4
             while time.monotonic() < endtime:
                 demo.step()

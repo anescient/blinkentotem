@@ -13,18 +13,21 @@
     PING, // watchdog reset
     FLUSH, // update led strings immediately
     CLEAR, // clear all colors and effects
-    CONFIG,
-    RGBFRAME, // entire rgb string
-    RGBWFRAME, // entire rgbw string
-    CPU_SPIN_B, // spins on rgbw blue
-    CPU_FADE_G, // faders on rgbw green
-    CPU_FADE_W, // faders on rgbw white
-    CPU_GLOW_R, // uint8_t[8]
-    LAMP, // rgb[0] to rgb[1]
+
+    CONFIG, // config_t
+
+    RGBFRAME, // rgb_t[8] entire rgb string
     DRUM, // rgb[2] to rgb[3]
     RAID, // rgb[4] to rgb[7]
+    LAMP, // rgb[0] to rgb[1]
     RAIDFLASH, // iopulse_t[4]
-    DRUMFLASH // iopulse_t[2]
+    DRUMFLASH, // iopulse_t[2]
+
+    RGBWFRAME, // rgbw_t[8] entire rgbw string
+    RGBW_FADE_R, // fade_t[8] for rgbw red
+    RGBW_FADE_G, // fade_t[8] for rgbw green
+    RGBW_SPIN_B, // spin_t[8] for rgbw blue
+    RGBW_FADE_W, // fade_t[8] for rgbw white
   };
 
   struct rgb_t {
@@ -53,8 +56,9 @@
   };
 
   struct fade_t {
-    uint8_t value;
-    uint8_t decayrate;
+    uint8_t targetvalue;
+    uint8_t uprate;
+    uint8_t downrate;
   };
 
   struct iopulse_t {

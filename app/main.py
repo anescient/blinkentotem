@@ -11,10 +11,6 @@ class CPUIndicator:
     def __init__(self, cpuindex, totem):
         self._cpuindex = cpuindex
         self._led = totem.rgbw[cpuindex]
-        self._bluespin = totem.bluespins[cpuindex]
-        self._greenfade = totem.greenfades[cpuindex]
-        self._whitefade = totem.whitefades[cpuindex]
-        self._redglow = totem.redglows[cpuindex]
         self._heat = 0
         self._frequency = 0
         self._brightness = 0
@@ -26,19 +22,14 @@ class CPUIndicator:
             self._heat += 0.02 * (busy - self._heat)
         if busy < 0.2:
             self._heat *= 0.97 + 0.03 * (busy / 0.2)
+        self._led.r_fade.targetvalue = unitToByte(self._heat)
 
-        redglow = 0.01 + (self._heat / 0.8) * 0.25
-        if self._heat > 0.8:
-            redglow = 0.25 + (self._heat - 0.8) / 0.2 * 0.75
-        self._redglow.targetvalue = unitToByte(redglow)
+        self._led.w_fade.targetvalue = 0
+        if busy > 0.9:
+            self._led.w_fade.targetvalue = unitToByte((busy - 0.9) / 0.1)
 
-        if self._heat > 0.8:
-            self._whitefade.pumpvalue = unitToByte((self._heat - 0.8) / 0.2)
-            self._whitefade.decayrate = 5
-
-        if cpuactivity.io > 0.05:
-            self._greenfade.pumpvalue = unitToByte(0.5 + 0.5 * cpuactivity.io)
-            self._greenfade.decayrate = 40
+        io = cpuactivity.io if cpuactivity.io > 0.05 else 0
+        self._led.g_fade.targetvalue = unitToByte(io)
 
         if busy > self._frequency:
             self._frequency = 0.8 * self._frequency + 0.2 * busy
@@ -49,8 +40,8 @@ class CPUIndicator:
             self._brightness = 0.8 * self._brightness + 0.2 * busy
         else:
             self._brightness = 0.2 * self._brightness + 0.8 * busy
-        self._bluespin.frequency = max(1, unitToByte(0.8 * self._frequency - 0.2))
-        self._bluespin.brightness = max(20, unitToByte(0.2 + 0.6 * self._brightness))
+        self._led.b_spin.frequency = max(1, unitToByte(0.8 * self._frequency - 0.2))
+        self._led.b_spin.brightness = max(20, unitToByte(0.2 + 0.6 * self._brightness))
 
 
 class RaidDiskIndicator:
@@ -98,6 +89,8 @@ def main():
     totem.config.raidGreen = 100
     totem.config.drumRed = 150
     totem.config.drumGreen = 200
+    totem.config.cpuRedSlowness = 150
+    totem.config.cpuGreenSlowness = 10
     totem.pushConfig()
 
     for led in totem.lamps:
@@ -133,6 +126,9 @@ def main():
 
         if frame % 10 == 0:
             totem.ping()
+
+        #if frame % 200 == 0:
+        #    totem.clear()
 
     # noinspection PyUnreachableCode
     return 0

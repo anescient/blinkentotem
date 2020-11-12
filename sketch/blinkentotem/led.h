@@ -27,16 +27,17 @@
       void renderTo(Adafruit_NeoPixel & rgbPix, int index);
   };
 
+  //////////////////////////////////////////////////
+
   class RGBWLED {
     public:
       rgbw_t color;
 
       Spinner blue_spin;
 
-      Fader white_fade;
+      Fader red_fade;
       Fader green_fade;
-
-      SlowGlow red_glow;
+      Fader white_fade;
 
       void clearColor();
 

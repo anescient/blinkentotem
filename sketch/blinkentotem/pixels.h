@@ -26,7 +26,10 @@
       bool rgbDirty = true;
       bool rgbwDirty = true;
 
+      // wait for -all- pixel instances
+      // they don't know to wait for each other
       void waitForPixels();
+
       void showRGB();
       void showRGBW();
 

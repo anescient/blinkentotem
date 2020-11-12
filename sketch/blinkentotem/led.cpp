@@ -7,8 +7,8 @@ void RGBLED::clearColor() {
 
 void RGBLED::clearEffects() {
   red_fade.clear();
-  green_fade.clear();
   red_flash.clear();
+  green_fade.clear();
   green_flash.clear();
 }
 
@@ -22,8 +22,8 @@ bool RGBLED::setRGB(rgb_t & rgb) {
 bool RGBLED::step(uint8_t dt) {
   bool changed = false;
   changed |= red_fade.step(dt);
-  changed |= green_fade.step(dt);
   changed |= red_flash.step(dt);
+  changed |= green_fade.step(dt);
   changed |= green_flash.step(dt);
   return changed;
 }
@@ -35,17 +35,17 @@ void RGBLED::renderTo(Adafruit_NeoPixel & rgbPix, int index) {
     color.b);
 }
 
-////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////
 
 void RGBWLED::clearColor() {
   memset(&color, 0, sizeof(rgbw_t));
 }
 
 void RGBWLED::clearEffects() {
+  red_fade.clear();
+  green_fade.clear();
   blue_spin.clear();
   white_fade.clear();
-  green_fade.clear();
-  red_glow.clear();
 }
 
 bool RGBWLED::setRGBW(rgbw_t & rgbw) {
@@ -57,17 +57,17 @@ bool RGBWLED::setRGBW(rgbw_t & rgbw) {
 
 bool RGBWLED::step(uint8_t dt) {
   bool changed = false;
+  changed |= red_fade.step(dt);
+  changed |= green_fade.step(dt);
   changed |= blue_spin.step(dt);
   changed |= white_fade.step(dt);
-  changed |= green_fade.step(dt);
-  changed |= red_glow.step(dt);
   return changed;
 }
 
 void RGBWLED::renderTo(Adafruit_NeoPixel & rgbwPix, int index) {
   rgbwPix.setPixelColor(index,
     green_fade.lighten(color.g),
-    red_glow.lighten(color.r),
+    red_fade.lighten(color.r),
     blue_spin.lighten(color.b),
     white_fade.lighten(color.w));
 }
