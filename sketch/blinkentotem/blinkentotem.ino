@@ -37,6 +37,9 @@ void loop() {
 
   switch(comm.receive(5)) {
     default:
+    case ERROR:
+      return;
+
     case NONE:
       pixels.step(dt8);
       return;

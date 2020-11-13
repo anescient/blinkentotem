@@ -10,15 +10,18 @@ datatype_t Comm::receive(int timeoutms) {
   Serial.setTimeout(timeoutms);
   if(!Serial.find('$'))
     return NONE;
-
   Serial.setTimeout(500);
-  size_t headersize = Serial.readBytesUntil('\0', buffer.bytes, COMM_BUFFER_SIZE);
-  if(headersize == 0)
-    return NONE;
 
-  datatype_t datatype = NONE;
+  char command;
+  if(!Serial.readBytes(&command, 1))
+    return ERROR;
+
+  datatype_t datatype = ERROR;
   size_t datasize = 0;
-  switch(buffer.command) {
+  switch(command) {
+    default:
+      break;
+
     case ' ':
       datatype = PING;
       break;
@@ -93,7 +96,7 @@ datatype_t Comm::receive(int timeoutms) {
   }
 
   if(datasize > 0 && Serial.readBytes(buffer.bytes, datasize) != datasize) {
-    datatype = NONE;
+    datatype = ERROR;
     digitalWrite(13, HIGH);
   }
   return datatype;

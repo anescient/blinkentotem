@@ -34,7 +34,7 @@ class Totem:
         def write(self, _serial):
             if self._data is None:
                 self._data = []
-            _serial.write([Totem._leadin, ord(self._addr), 0] + self._data)
+            _serial.write([Totem._leadin, ord(self._addr)] + self._data)
             self.dirty = False
 
     class _PulseEndpoint(_Endpoint):
@@ -191,19 +191,19 @@ class Totem:
 
     # WDT reset
     def ping(self):
-        self._serial.write([self._leadin, ord(' '), 0])
+        self._serial.write([self._leadin, ord(' ')])
         self._serial.flush()
 
     def clear(self):
-        self._serial.write([self._leadin, ord('c'), 0])
+        self._serial.write([self._leadin, ord('c')])
         self._serial.flush()
 
     def flush(self):
-        self._serial.write([self._leadin, ord(';'), 0])
+        self._serial.write([self._leadin, ord(';')])
         self._serial.flush()
 
     def pushConfig(self):
-        self._serial.write([self._leadin, ord('p'), 0] + self.config.getPayload())
+        self._serial.write([self._leadin, ord('p')] + self.config.getPayload())
         self._serial.flush()
 
     def pushFrames(self, force=False):

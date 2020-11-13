@@ -9,7 +9,8 @@
   #define COMM_BUFFER_SIZE (RGBW_COUNT * sizeof(rgbw_t))
 
   enum datatype_t {
-    NONE, // timeout or error or whatever
+    NONE, // timeout, no data
+    ERROR,
     PING, // watchdog reset
     FLUSH, // update led strings immediately
     CLEAR, // clear all colors and effects
@@ -71,7 +72,6 @@
 
       union {
         uint8_t     bytes [COMM_BUFFER_SIZE];
-        char        command;
         config_t    config;
         rgb_t       rgb [RGB_COUNT];
         rgbw_t      rgbw [RGBW_COUNT];
