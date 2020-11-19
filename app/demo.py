@@ -113,7 +113,7 @@ if __name__ == '__main__':
              Chasers(totem),
              FadeTest(totem)]
 
-    demos = [FadeTest(totem)]
+    demos = [Chasers(totem)]
 
     while True:
         for demo in demos:

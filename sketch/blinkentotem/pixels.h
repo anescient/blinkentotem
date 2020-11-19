@@ -9,7 +9,8 @@
 
   class Pixels {
     private:
-      // multiple instances of this thing almost works
+
+      // multiple instances of these things _almost_ works
       // they seem to share memory (in a bad way)
       Adafruit_NeoPixel rgbpix;
       Adafruit_NeoPixel rgbwpix;

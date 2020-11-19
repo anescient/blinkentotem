@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import random
 import time
 
 from blinkentotem import Totem, unitToByte
@@ -8,12 +9,13 @@ from superps import SystemActivity
 
 class CPUIndicator:
 
-    def __init__(self, cpuindex, totem):
+    def __init__(self, cpuindex, totem, personality):
         self._cpuindex = cpuindex
         self._led = totem.rgbw[cpuindex]
         self._heat = 0
         self._frequency = 0
         self._brightness = 0
+        self._personality = personality
 
     def update(self, cpuactivity):
         busy = cpuactivity.busy
@@ -21,8 +23,9 @@ class CPUIndicator:
         if busy > self._heat:
             self._heat += 0.02 * (busy - self._heat)
         if busy < 0.2:
-            self._heat *= 0.97 + 0.03 * (busy / 0.2)
-        self._led.r_fade.targetvalue = unitToByte(self._heat)
+            cooling = 0.95 + 0.03 * self._personality
+            self._heat *= cooling + 0.03 * (busy / 0.2)
+        self._led.r_fade.targetvalue = max(30, unitToByte(self._heat))
 
         self._led.w_fade.targetvalue = 0
         if busy > 0.9:
@@ -31,31 +34,31 @@ class CPUIndicator:
         io = cpuactivity.io if cpuactivity.io > 0.05 else 0
         self._led.g_fade.targetvalue = unitToByte(io)
 
-        if busy > self._frequency:
-            self._frequency = 0.8 * self._frequency + 0.2 * busy
-        else:
-            self._frequency = 0.6 * self._frequency + 0.4 * busy
+        self._frequency = 0.5 * self._frequency + 0.5 * busy
 
         if busy > self._brightness:
             self._brightness = 0.8 * self._brightness + 0.2 * busy
         else:
             self._brightness = 0.2 * self._brightness + 0.8 * busy
-        self._led.b_spin.frequency = max(1, unitToByte(0.8 * self._frequency - 0.2))
+
+        freq = 0.6 * self._frequency + 0.05 * self._personality
+        self._led.b_spin.frequency = max(1, unitToByte(freq - 0.3))
         self._led.b_spin.brightness = max(20, unitToByte(0.2 + 0.6 * self._brightness))
 
 
 class RaidDiskIndicator:
     def __init__(self, pulse):
-        self._divisor = 150000
+        self._divisor = 250000
         self._pulse = pulse
 
     def update(self, diskactivity):
         read, written = diskactivity.bytesread, diskactivity.byteswritten
+        if written > read:
+            read = written
         if read > 0:
-            self._pulse.read = max(1, min(70, read // self._divisor))
+            self._pulse.read = max(1, min(30, read // self._divisor)) + random.randint(1, 20)
         if written > 0:
-            self._pulse.write = max(1, min(70, written // self._divisor))
-        self._pulse.read = max(self._pulse.read, self._pulse.write // 2)
+            self._pulse.write = 40
 
 
 class DrumIndicator:
@@ -85,25 +88,23 @@ class DrumIndicator:
 def main():
     totem = Totem()
     totem.clear()
-    totem.config.raidRed = 30
-    totem.config.raidGreen = 100
+    totem.config.raidRed = 20
+    totem.config.raidGreen = 150
     totem.config.drumRed = 150
     totem.config.drumGreen = 200
-    totem.config.cpuRedSlowness = 150
-    totem.config.cpuGreenSlowness = 10
     totem.pushConfig()
 
     for led in totem.lamps:
-        led.setrgb(20, 8, 14)
+        led.setrgb(80, 40, 50)
     for led in totem.raid:
-        led.g = 4
+        led.g = 10
     totem.pushPieces()
 
     raidDevices = ['sdb', 'sdc', 'sdd', 'sde']
     rootDevice = 'sda'
 
     systemActivity = SystemActivity([rootDevice] + raidDevices)
-    cpuIndicators = [CPUIndicator(i, totem) for i in range(8)]
+    cpuIndicators = [CPUIndicator(i, totem, i / 8) for i in range(8)]
     raidIndicators = [RaidDiskIndicator(pulse) for pulse in totem.raidpulse]
     rootIndicator = DrumIndicator(totem)
 
@@ -116,19 +117,18 @@ def main():
             for activity, indicator in zip(cpus, cpuIndicators):
                 indicator.update(activity)
 
-        disks = systemActivity.updateDisks()
-        for device, indicator in zip(raidDevices, raidIndicators):
-            indicator.update(disks[device])
-        rootIndicator.update(disks[rootDevice])
+        if frame % 2 == 0:
+            disks = systemActivity.updateDisks()
+            for device, indicator in zip(raidDevices, raidIndicators):
+                indicator.update(disks[device])
+            rootIndicator.update(disks[rootDevice])
 
-        totem.pushPieces()
+        if totem.pushPieces():
+            totem.flush()
         time.sleep(0.05)
 
-        if frame % 10 == 0:
+        if frame % 15 == 0:
             totem.ping()
-
-        #if frame % 200 == 0:
-        #    totem.clear()
 
     # noinspection PyUnreachableCode
     return 0
