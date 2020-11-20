@@ -215,6 +215,8 @@ class Totem:
                 ep.write(self._serial)
                 self._serial.flush()
                 updated = True
+        if updated:
+            self.flush()
         return updated
 
     def pushPieces(self, force=False):
@@ -237,4 +239,6 @@ class Totem:
                 ep.write(self._serial)
                 self._serial.flush()
                 updated = True
+        if updated:
+            self.flush()
         return updated

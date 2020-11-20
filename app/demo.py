@@ -35,7 +35,6 @@ class FlashyCounters(_Demo):
                 led.w = 250
         self.totem.rgbw[randint(0, 7)].g = 250
         self.totem.pushPieces()
-        self.totem.flush()
         time.sleep(0.01)
 
 
@@ -86,7 +85,6 @@ class Chasers(_Demo):
         if random() < 0.1:
             self.greeni = (self.greeni + 1) % len(self._leds)
         totem.pushPieces()
-        totem.flush()
 
 
 class FadeTest(_Demo):
@@ -102,7 +100,6 @@ class FadeTest(_Demo):
         for fade in self._fades:
             fade.targetvalue = randint(0, 200)
         totem.pushPieces()
-        totem.flush()
         time.sleep(0.7)
 
 

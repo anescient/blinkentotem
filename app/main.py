@@ -123,8 +123,7 @@ def main():
                 indicator.update(disks[device])
             rootIndicator.update(disks[rootDevice])
 
-        if totem.pushPieces():
-            totem.flush()
+        totem.pushPieces()
         time.sleep(0.05)
 
         if frame % 15 == 0:
