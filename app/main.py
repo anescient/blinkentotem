@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import random
 import time
 
 from blinkentotem import Totem, unitToByte
@@ -53,12 +52,17 @@ class RaidDiskIndicator:
 
     def update(self, diskactivity):
         read, written = diskactivity.bytesread, diskactivity.byteswritten
-        if written > read:
-            read = written
-        if read > 0:
-            self._pulse.read = max(1, min(30, read // self._divisor)) + random.randint(1, 20)
-        if written > 0:
-            self._pulse.write = 40
+        total = read + written
+        if total == 0:
+            return
+        read = read / total
+        written = written / total
+        if written > 0.9:
+            read, written = 0.1, 0.9
+
+        x = max(1, total // self._divisor)
+        self._pulse.read = min(100, int(read * x))
+        self._pulse.write = min(70, int(written * x))
 
 
 class DrumIndicator:
@@ -89,7 +93,7 @@ def main():
     totem = Totem()
     totem.clear()
     totem.config.raidRed = 20
-    totem.config.raidGreen = 150
+    totem.config.raidGreen = 120
     totem.config.drumRed = 150
     totem.config.drumGreen = 200
     totem.pushConfig()
@@ -112,19 +116,18 @@ def main():
     while True:
         frame += 1
 
-        if frame % 3 == 0:
+        if frame % 2 == 0:
             cpus = systemActivity.updateCPUs()
             for activity, indicator in zip(cpus, cpuIndicators):
                 indicator.update(activity)
 
-        if frame % 2 == 0:
-            disks = systemActivity.updateDisks()
-            for device, indicator in zip(raidDevices, raidIndicators):
-                indicator.update(disks[device])
-            rootIndicator.update(disks[rootDevice])
+        disks = systemActivity.updateDisks()
+        for device, indicator in zip(raidDevices, raidIndicators):
+            indicator.update(disks[device])
+        rootIndicator.update(disks[rootDevice])
 
         totem.pushPieces()
-        time.sleep(0.05)
+        time.sleep(0.07)
 
         if frame % 15 == 0:
             totem.ping()
