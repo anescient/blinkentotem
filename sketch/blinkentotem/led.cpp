@@ -6,9 +6,7 @@ void RGBLED::clearColor() {
 }
 
 void RGBLED::clearEffects() {
-  red_fade.clear();
   red_flash.clear();
-  green_fade.clear();
   green_flash.clear();
 }
 
@@ -21,17 +19,15 @@ bool RGBLED::setRGB(rgb_t & rgb) {
 
 bool RGBLED::step(uint8_t dt) {
   bool changed = false;
-  changed |= red_fade.step(dt);
   changed |= red_flash.step(dt);
-  changed |= green_fade.step(dt);
   changed |= green_flash.step(dt);
   return changed;
 }
 
 void RGBLED::renderTo(Adafruit_NeoPixel & rgbPix, int index) {
   rgbPix.setPixelColor(index,
-    red_fade.lighten(red_flash.lighten(color.r)),
-    green_fade.lighten(green_flash.lighten(color.g)),
+    red_flash.lighten(color.r),
+    green_flash.lighten(color.g),
     color.b);
 }
 

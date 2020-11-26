@@ -68,9 +68,7 @@ class Totem:
     class RGBled:
         def __init__(self):
             self.r = 0
-            self.r_fade = Totem.Fader()
             self.g = 0
-            self.g_fade = Totem.Fader()
             self.b = 0
 
         def clear(self):

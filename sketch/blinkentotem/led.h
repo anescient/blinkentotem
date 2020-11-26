@@ -10,9 +10,6 @@
     public:
       rgb_t color;
 
-      Fader red_fade;
-      Fader green_fade;
-
       Flash red_flash;
       Flash green_flash;
 
