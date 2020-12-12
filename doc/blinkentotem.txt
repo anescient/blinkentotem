@@ -1,0 +1,32 @@
+
+Blinkenlights aren't what they used to be.
+Computers don't have enough blinkenlights.
+
+This is not blinkenlights:
+(neon rainbow gamer rig)
+That's just ground effects.
+(rice car)
+Blinkenlights tell you something about the machine's state and activity, like an instrument panel.
+Though neat-o, they've been on a steady decline from the start.
+Back in the day every -bit- had its own light.
+These days you're lucky if you have a single disk activity light.
+
+
+I've used software widgets.
+Some windows 2000 thing?
+recommend openhardwaremonitor(?) for nerd telemetry
+conky
+Screenlets
+My screenlets
+This screenlet renders a panel of LED thingies.
+It takes high framerate animation to make proper short flashes; it's barely worth it.
+There's no substitute for actual flashing LEDs.
+
+
+
+In the future I'll add this:
+(20x2 display)
+Then I can do RAM, top process, network activity, etc.
+It supports custom characters, and it can be updated in small pieces, so animations, probably, too.
+(20x2 mockup)
+
