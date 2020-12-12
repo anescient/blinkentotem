@@ -130,6 +130,7 @@ class Totem:
 
     def __init__(self, serialport='/dev/ttyUSB0'):
         self._serial = serial.Serial(serialport, 56000)
+        self._lastCommTime = 0
         self.config = self.Configuration()
 
         self.rgbw = [self.RGBWled() for _ in range(8)]
@@ -187,22 +188,29 @@ class Totem:
     def __del__(self):
         self._serial.close()
 
-    # WDT reset
+    def keepalive(self):
+        if time.monotonic() > self._lastCommTime + 0.7:
+            self.ping()
+
     def ping(self):
         self._serial.write([self._leadin, ord(' ')])
         self._serial.flush()
+        self._lastCommTime = time.monotonic()
 
     def clear(self):
         self._serial.write([self._leadin, ord('c')])
         self._serial.flush()
+        self._lastCommTime = time.monotonic()
 
     def flush(self):
         self._serial.write([self._leadin, ord(';')])
         self._serial.flush()
+        self._lastCommTime = time.monotonic()
 
     def pushConfig(self):
         self._serial.write([self._leadin, ord('p')] + self.config.getPayload())
         self._serial.flush()
+        self._lastCommTime = time.monotonic()
 
     def pushFrames(self, force=False):
         self._ep.rgb.update(self.rgb)
@@ -215,6 +223,8 @@ class Totem:
                 updated = True
         if updated:
             self.flush()
+        else:
+            self.keepalive()
         return updated
 
     def pushPieces(self, force=False):
@@ -239,4 +249,6 @@ class Totem:
                 updated = True
         if updated:
             self.flush()
+        else:
+            self.keepalive()
         return updated

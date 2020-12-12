@@ -129,9 +129,6 @@ def main():
         totem.pushPieces()
         time.sleep(0.07)
 
-        if frame % 15 == 0:
-            totem.ping()
-
     # noinspection PyUnreachableCode
     return 0
 
