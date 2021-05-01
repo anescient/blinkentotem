@@ -47,10 +47,30 @@ class SystemActivity:
             self.busy = busytime / dt
             self.io = iotime / dt
 
+
+    class SwapActivity:
+
+        def __init__(self):
+            self._prevsin = 0
+            self._prevsout = 0
+
+        def getBytesSince(self):
+            swapmem = psutil.swap_memory()
+            sin, sout = swapmem.sin, swapmem.sout
+            bytes = 0
+            if sin > self._prevsin:
+                bytes += sin - self._prevsin
+                self._prevsin = sin
+            if sout > self._prevsout:
+                bytes += sout - self._prevsout
+                self._prevsout = sout
+            return bytes
+
     # disks is a list of /dev/ file names e.g. 'sda', 'md0'
     def __init__(self, disks):
         self._diskActivities = {dev: self.DiskActivity() for dev in disks}
         self._cpuActivities = [self.CPUActivity(i) for i in range(8)]
+        self.swapActivity = self.SwapActivity()
 
     def updateDisks(self):
         diskcounters = psutil.disk_io_counters(perdisk=True, nowrap=True)

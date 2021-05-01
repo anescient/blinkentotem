@@ -70,7 +70,7 @@ class DrumIndicator:
         self._ssdDivisor = 800000
         self._totem = totem
 
-    def update(self, diskactivity):
+    def update(self, diskactivity, blue):
         read, written = diskactivity.bytesread, diskactivity.byteswritten
         pulse = self._totem.drumpulse
         if read > 0:
@@ -82,11 +82,11 @@ class DrumIndicator:
         self._totem.drum[0].setrgb(
             unitToByte(x * 0.28),
             unitToByte(x * 0.33),
-            unitToByte(x * 0.15))
+            unitToByte(x * 0.15 + blue))
         self._totem.drum[1].setrgb(
             unitToByte(x * 0.15),
             unitToByte(x * 0.15),
-            unitToByte(x * 0.06))
+            unitToByte(x * 0.06 + blue))
 
 
 def main():
@@ -124,7 +124,8 @@ def main():
         disks = systemActivity.updateDisks()
         for device, indicator in zip(raidDevices, raidIndicators):
             indicator.update(disks[device])
-        rootIndicator.update(disks[rootDevice])
+        swapping = 1 if systemActivity.swapActivity.getBytesSince() > 0 else 0
+        rootIndicator.update(disks[rootDevice], swapping)
 
         totem.pushPieces()
         time.sleep(0.07)
