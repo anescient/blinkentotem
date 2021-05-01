@@ -7,7 +7,6 @@ from superps import SystemActivity
 
 
 class CPUIndicator:
-
     def __init__(self, cpuindex, totem, personality):
         self._cpuindex = cpuindex
         self._led = totem.rgbw[cpuindex]
@@ -20,20 +19,20 @@ class CPUIndicator:
         busy = cpuactivity.busy
 
         if busy > self._heat:
-            self._heat += 0.02 * (busy - self._heat)
+            self._heat += 0.01 * (busy - self._heat)
         if busy < 0.2:
             cooling = 0.95 + 0.03 * self._personality
             self._heat *= cooling + 0.03 * (busy / 0.2)
         self._led.r_fade.targetvalue = max(30, unitToByte(self._heat))
 
         self._led.w_fade.targetvalue = 0
-        if busy > 0.9:
-            self._led.w_fade.targetvalue = unitToByte((busy - 0.9) / 0.1)
+        if self._heat > 0.8 and busy > 0.8:
+            self._led.w_fade.targetvalue = unitToByte((busy - 0.8) / 0.2)
 
         io = cpuactivity.io if cpuactivity.io > 0.05 else 0
         self._led.g_fade.targetvalue = unitToByte(io)
 
-        self._frequency = 0.5 * self._frequency + 0.5 * busy
+        self._frequency = 0.8 * self._frequency + 0.2 * busy
 
         if busy > self._brightness:
             self._brightness = 0.8 * self._brightness + 0.2 * busy
@@ -101,7 +100,7 @@ def main():
     for led in totem.lamps:
         led.setrgb(80, 40, 50)
     for led in totem.raid:
-        led.g = 10
+        led.g = 6
     totem.pushPieces()
 
     raidDevices = ['sdb', 'sdc', 'sdd', 'sde']
