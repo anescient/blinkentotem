@@ -90,15 +90,22 @@ class Chasers(_Demo):
 class FadeTest(_Demo):
     def __init__(self, totem):
         super().__init__(totem)
-        self._fades = [led.r_fade for led in totem.rgbw]
-        for fade in self._fades:
+        self._rfades = [led.r_fade for led in totem.rgbw]
+        for fade in self._rfades:
+            fade.uprate = 20
+            fade.downrate = 20
+        self._gfades = [led.g_fade for led in totem.rgbw]
+        for fade in self._gfades:
             fade.uprate = 100
-            fade.downrate = 100
+            fade.downrate = 20
 
     def step(self):
         super().step()
-        for fade in self._fades:
+        for fade in self._rfades:
             fade.targetvalue = randint(0, 200)
+        for gfade in self._gfades:
+            gfade.targetvalue = 0
+        randomchoice(self._gfades).targetvalue = randint(100, 200)
         totem.pushPieces()
         time.sleep(0.7)
 
@@ -110,7 +117,7 @@ if __name__ == '__main__':
              Chasers(totem),
              FadeTest(totem)]
 
-    demos = [Chasers(totem)]
+    demos = [FadeTest(totem)]
 
     while True:
         for demo in demos:
