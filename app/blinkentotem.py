@@ -143,8 +143,8 @@ class Totem:
             fade.uprate = 255
             fade.downrate = 50
         for fade in self._r_fades:
-            fade.uprate = 10
-            fade.downrate = 2
+            fade.uprate = 7
+            fade.downrate = 7
         for fade in self._w_fades:
             fade.uprate = 5
             fade.downrate = 20

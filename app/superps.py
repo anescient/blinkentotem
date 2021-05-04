@@ -3,6 +3,21 @@
 import psutil
 
 
+class AutoRangeNumber:
+    def __init__(self, premin=None, premax=None):
+        self.value = None
+        self.minvalue = premin
+        self.maxvalue = premax
+        self.relativeValue = None
+
+    def updateValue(self, value):
+        self.value = value
+        self.minvalue = min(self.minvalue or self.value, self.value)
+        self.maxvalue = max(self.maxvalue or self.value, self.value)
+        range = self.maxvalue - self.minvalue
+        self.relativeValue = (self.value - self.minvalue) / range if range > 0 else 0
+
+
 class SystemActivity:
 
     class DiskActivity:
@@ -26,8 +41,10 @@ class SystemActivity:
         def __init__(self, scpuindex):
             self._prevtimes = None
             self._scpuindex = scpuindex
+            self._coretempindex = 1 + (scpuindex % 4)
             self.busy = 0
             self.io = 0
+            self.thermal = AutoRangeNumber(28, 67)
 
         def update(self, scputimes):
             nexttimes = scputimes[self._scpuindex]
@@ -47,6 +64,8 @@ class SystemActivity:
             self.busy = busytime / dt
             self.io = iotime / dt
 
+        def updateTemp(self, coretemps):
+            self.thermal.updateValue(coretemps[self._coretempindex].current)
 
     class SwapActivity:
 
@@ -72,6 +91,11 @@ class SystemActivity:
         self._cpuActivities = [self.CPUActivity(i) for i in range(8)]
         self.swapActivity = self.SwapActivity()
 
+    def updateAll(self):
+        self.updateDisks()
+        self.updateCPUs()
+        self.updateCPUTemps()
+
     def updateDisks(self):
         diskcounters = psutil.disk_io_counters(perdisk=True, nowrap=True)
         for device, activity in self._diskActivities.items():
@@ -82,4 +106,10 @@ class SystemActivity:
         cputimes = psutil.cpu_times(percpu=True)
         for activity in self._cpuActivities:
             activity.update(cputimes)
+        return self._cpuActivities
+
+    def updateCPUTemps(self):
+        coretemps = psutil.sensors_temperatures()['coretemp']
+        for activity in self._cpuActivities:
+            activity.updateTemp(coretemps)
         return self._cpuActivities

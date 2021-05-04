@@ -7,29 +7,34 @@ from superps import SystemActivity
 
 
 class CPUIndicator:
-    def __init__(self, cpuindex, totem, personality):
+    def __init__(self, cpuindex, led, personality):
         self._cpuindex = cpuindex
-        self._led = totem.rgbw[cpuindex]
-        self._heat = 0
+        self._led = led
+        self._fakeheat = 0
         self._frequency = 0
         self._brightness = 0
         self._personality = personality
 
-    def update(self, cpuactivity):
-        busy = cpuactivity.busy
+    def update(self, cpuactivities):
+        cpu = cpuactivities[self._cpuindex]
+        busy = cpu.busy
+        heat = cpu.thermal.relativeValue
 
-        if busy > self._heat:
-            self._heat += 0.01 * (busy - self._heat)
+        if busy > self._fakeheat:
+            self._fakeheat += 0.01 * (busy - self._fakeheat)
         if busy < 0.2:
             cooling = 0.95 + 0.03 * self._personality
-            self._heat *= cooling + 0.03 * (busy / 0.2)
-        self._led.r_fade.targetvalue = max(30, unitToByte(self._heat))
+            self._fakeheat *= cooling + 0.03 * (busy / 0.2)
+        if heat is None:
+            heat = self._fakeheat
+
+        self._led.r_fade.targetvalue = max(30, unitToByte(heat))
 
         self._led.w_fade.targetvalue = 0
-        if self._heat > 0.8 and busy > 0.8:
+        if heat > 0.8 and busy > 0.8:
             self._led.w_fade.targetvalue = unitToByte((busy - 0.8) / 0.2)
 
-        io = cpuactivity.io if cpuactivity.io > 0.05 else 0
+        io = cpu.io if cpu.io > 0.05 else 0
         self._led.g_fade.targetvalue = unitToByte(io)
 
         self._frequency = 0.8 * self._frequency + 0.2 * busy
@@ -107,18 +112,28 @@ def main():
     rootDevice = 'sda'
 
     systemActivity = SystemActivity([rootDevice] + raidDevices)
-    cpuIndicators = [CPUIndicator(i, totem, i / 8) for i in range(8)]
+    cpuIndicators = [CPUIndicator((i * 4 + i // 2) % 8, totem.rgbw[i], i / 8) for i in range(8)]
     raidIndicators = [RaidDiskIndicator(pulse) for pulse in totem.raidpulse]
     rootIndicator = DrumIndicator(totem)
 
+    systemActivity.updateAll()
+
+    dt = 0.07
+    clockCPUTemp = 0
+    intervalCPUTemp = 1.0
     frame = 0
     while True:
+        time.sleep(dt)
+        clockCPUTemp += dt
         frame += 1
 
         if frame % 2 == 0:
             cpus = systemActivity.updateCPUs()
-            for activity, indicator in zip(cpus, cpuIndicators):
-                indicator.update(activity)
+            if clockCPUTemp > intervalCPUTemp:
+                clockCPUTemp = max(intervalCPUTemp, clockCPUTemp - intervalCPUTemp)
+                cpus = systemActivity.updateCPUTemps()
+            for indicator in cpuIndicators:
+                indicator.update(cpus)
 
         disks = systemActivity.updateDisks()
         for device, indicator in zip(raidDevices, raidIndicators):
@@ -127,7 +142,6 @@ def main():
         rootIndicator.update(disks[rootDevice], swapping)
 
         totem.pushPieces()
-        time.sleep(0.07)
 
     # noinspection PyUnreachableCode
     return 0
