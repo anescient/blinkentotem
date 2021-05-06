@@ -93,6 +93,54 @@ class DrumIndicator:
             unitToByte(x * 0.06 + blue))
 
 
+class MixedClocks:
+    class TickClock:
+        def __init__(self, ticksper):
+            self._ticksPer = ticksper
+            self._ticks = 0
+
+        def tick(self, _):
+            self._ticks += 1
+
+        def popTock(self):
+            if self._ticks >= self._ticksPer:
+                self._ticks -= self._ticksPer
+                return True
+            return False
+
+    class IntervalClock:
+        def __init__(self, interval):
+            self._interval = interval
+            self._seconds = 0
+
+        def tick(self, seconds):
+            self._seconds += seconds
+
+        def popTock(self):
+            if self._seconds >= self._interval:
+                self._seconds -= self._interval
+                return True
+            return False
+
+    def __init__(self):
+        self._clocks = []
+
+    def getTickClock(self, ticksper):
+        clock = MixedClocks.TickClock(ticksper)
+        self._clocks.append(clock)
+        return clock
+
+    def getIntervalClock(self, interval):
+        clock = MixedClocks.IntervalClock(interval)
+        self._clocks.append(clock)
+        return clock
+
+    def tickSleep(self, seconds):
+        for clock in self._clocks:
+            clock.tick(seconds)
+        time.sleep(seconds)
+
+
 def main():
     totem = Totem()
     totem.clear()
@@ -118,19 +166,15 @@ def main():
 
     systemActivity.updateAll()
 
-    dt = 0.07
-    clockCPUTemp = 0
-    intervalCPUTemp = 1.0
-    frame = 0
+    clocks = MixedClocks()
+    clockCPU = clocks.getTickClock(2)
+    clockCPUTemp = clocks.getIntervalClock(1.0)
     while True:
-        time.sleep(dt)
-        clockCPUTemp += dt
-        frame += 1
+        clocks.tickSleep(0.07)
 
-        if frame % 2 == 0:
+        if clockCPU.popTock():
             cpus = systemActivity.updateCPUs()
-            if clockCPUTemp > intervalCPUTemp:
-                clockCPUTemp = max(intervalCPUTemp, clockCPUTemp - intervalCPUTemp)
+            if clockCPUTemp.popTock():
                 cpus = systemActivity.updateCPUTemps()
             for indicator in cpuIndicators:
                 indicator.update(cpus)
